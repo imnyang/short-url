@@ -19,11 +19,6 @@ const resolvePage = async pageInfo => {
     let page;
     if(typeof pageInfo === 'string') page = await Page.findOne({ id: pageInfo });
     else if(typeof pageInfo === 'object') page = pageInfo;
-    // TODO: remove this test code
-    // else page = {
-    //     url: 'sans',
-    //     flows: [{condition:{id:'EVERYONE',data:{}},action:{id:'REJECT',data:{}}}]
-    // }
 
     return page;
 }
@@ -40,6 +35,7 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
 
     return {
         fetchReply: true,
+        content: '',
         embeds: [
             new EmbedBuilder()
                 .setColor(0x349eeb)
@@ -317,7 +313,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                 if(!data.length) return;
 
                 if(data[0].choices) {
-                    const prevValues = targetFlowObj.data[data[0].name].split(',');
+                    const prevValues = targetFlowObj.data[data[0].name]?.split(',') ?? [];
 
                     await i.update({
                         content: '원하는 옵션을 선택하세요.',
@@ -328,11 +324,18 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                                         .setCustomId('option')
                                         .addOptions(data[0].choices.map(a => ({
                                             label: a.label,
-                                            value: a.value,
+                                            value: a.name,
                                             emoji: a.emoji,
-                                            default: prevValues.includes(a.value)
+                                            default: prevValues.includes(a.name)
                                         })))
                                         .setMaxValues(data[0].allowMultiple ? data[0].choices.length : 1)
+                                ]),
+                            new ActionRowBuilder()
+                                .addComponents([
+                                    new ButtonBuilder()
+                                        .setCustomId('cancel')
+                                        .setLabel('취소')
+                                        .setStyle(ButtonStyle.Danger)
                                 ])
                         ]
                     });
@@ -349,6 +352,8 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                             ephemeral: true
                         });
                     }
+
+                    if(response.customId === 'cancel') return response.update(await getMessage(page, selectedFlowIndex));
 
                     targetFlowObj.data[data[0].name] = response.values.join(',');
                 }
@@ -415,5 +420,11 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
 
             return i.update(await getMessage(page, selectedFlowIndex));
         }
+    });
+
+    collector.on('end', () => {
+        message.components = utils.disableComponents(message.components);
+
+        return message.edit(message);
     });
 }
