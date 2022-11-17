@@ -1,0 +1,17 @@
+{
+  "BOT_TOKEN": "",
+
+  "DISCORD_CLIENT_ID": "",
+  "DISCORD_CLIENT_SECRET": "",
+
+  "BASE_URL": "https://example.com",
+
+  "PORT": 3000,
+  "SESSION_SECRET": "secret",
+
+  "MONGODB_HOST": "localhost",
+  "MONGODB_PORT": 27017,
+  "MONGODB_USER": "",
+  "MONGODB_PASSWORD": "",
+  "DBNAME": "ShortURL"
+}
