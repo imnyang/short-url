@@ -1,0 +1,33 @@
+const mongoose = require('mongoose');
+const randomstring = require('randomstring');
+const uniqueString = require('unique-string');
+
+const { Schema } = mongoose;
+const newSchema = new Schema({
+    id: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true,
+        default: uniqueString
+    },
+    url: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true,
+        default: () => randomstring.generate(8)
+    },
+    flows: {
+        type: Array,
+        required: true,
+        default: []
+    },
+    expiresAt: {
+        type: Number,
+        required: true,
+        default: 0
+    }
+});
+
+module.exports = mongoose.model('Page', newSchema);

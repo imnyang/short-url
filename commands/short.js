@@ -1,0 +1,43 @@
+const { ApplicationCommandOptionType: Options } = require('discord.js');
+const randomstring = require('randomstring');
+
+const main = require('../main');
+const utils = require('../utils');
+
+const Page = require('../schemas/page');
+
+module.exports = {
+    info: {
+        name: 'short',
+        description: 'URL을 짧게 만들어줍니다.',
+        options: [
+            {
+                name: 'url',
+                description: '짧게 만들 URL입니다.',
+                type: Options.String,
+                required: true
+            }
+        ]
+    },
+    handler: async interaction => {
+        const url = interaction.options.getString('url');
+
+        const page = new Page({
+            url: randomstring.generate(main.getOwnerID().includes(interaction.user.id) ? 4 : 8),
+            flows: [{
+                condition: {
+                    id: 'EVERYONE'
+                },
+                action: {
+                    id: 'REDIRECT',
+                    data: {
+                        url
+                    }
+                }
+            }]
+        });
+        await page.save();
+
+        return interaction.reply(utils.formatUrl(page.url));
+    }
+}
