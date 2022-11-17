@@ -3,7 +3,8 @@ const {
     Team,
     GatewayIntentBits,
     Partials,
-    InteractionType
+    InteractionType,
+    OAuth2Scopes
 } = require('discord.js');
 const fs = require('fs');
 const {
@@ -29,6 +30,13 @@ const client = new Client({
     ],
     partials: [
         Partials.Channel
+    ]
+});
+
+module.exports.getInviteURL = () => client.generateInvite({
+    scopes: [
+        OAuth2Scopes.Bot,
+        OAuth2Scopes.ApplicationsCommands
     ]
 });
 

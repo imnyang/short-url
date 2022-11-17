@@ -1,10 +1,15 @@
 const express = require('express');
 
+const main = require('../../main');
 const flow = require('../../flow');
 
 const Page = require('../../schemas/page');
 
 const app = express.Router();
+
+app.get('/', (req, res) => {
+    res.redirect(main.getInviteURL());
+});
 
 app.get('/:url', async (req, res) => {
     const page = await Page.findOne({
