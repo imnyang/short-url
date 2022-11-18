@@ -37,7 +37,8 @@ module.exports = async interaction => {
                     }
                     : {}
             }
-        }]
+        }],
+        creator: interaction.user.id
     });
     await page.save();
 

@@ -34,7 +34,8 @@ module.exports = {
                         url
                     }
                 }
-            }]
+            }],
+            creator: interaction.user.id
         });
         await page.save();
 
