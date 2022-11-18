@@ -43,4 +43,17 @@ app.get('/:url', async (req, res) => {
     res.status(406).end();
 });
 
+app.get('/:url/info', async (req, res) => {
+    if(!req.isAuthenticated()) return res.redirect(`/login?redirect_url=${encodeURIComponent(req.originalUrl)}`);
+
+    if(!main.getOwnerID().includes(req.user.id)) return res.status(403).end();
+
+    const page = await Page.findOne({
+        url: req.params.url
+    });
+    if(!page) return res.status(404).end();
+
+    res.end(JSON.stringify(page, null, 2));
+});
+
 module.exports = app;
