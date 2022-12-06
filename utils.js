@@ -340,7 +340,7 @@ module.exports.parseGithubURL = url => {
     }
 }
 
-const defaultUserEmbed = (member, options = {}) => {
+const defaultUserEmbed = (interaction, options = {}) => {
     const defaultValues = {
         title: null,
         description: null,
@@ -355,8 +355,8 @@ const defaultUserEmbed = (member, options = {}) => {
     return new EmbedBuilder()
         .setColor(options.color)
         .setAuthor({
-            name: member.displayName,
-            iconURL: member.displayAvatarURL()
+            name: interaction.member?.displayName || interaction.user.username,
+            iconURL: interaction.member?.displayAvatarURL() || interaction.user.displayAvatarURL()
         })
         .setTitle(options.title)
         .setDescription(options.description)
@@ -371,7 +371,7 @@ const defaultUserEmbed = (member, options = {}) => {
 }
 module.exports.defaultUserEmbed = defaultUserEmbed;
 
-module.exports.errorEmbed = (memeber, description) => defaultUserEmbed(memeber, {
+module.exports.errorEmbed = (interaction, description) => defaultUserEmbed(interaction, {
     title: '오류',
     description,
     color: 0xff0000

@@ -22,6 +22,11 @@ module.exports = {
     handler: async interaction => {
         const url = interaction.options.getString('url');
 
+        if(!utils.validateURL(url)) return interaction.reply({
+            embeds: [utils.errorEmbed(interaction, '올바른 URL이 아닙니다!')],
+            ephemeral: true
+        });
+
         const page = new Page({
             url: randomstring.generate(main.getOwnerID().includes(interaction.user.id) ? 4 : 8),
             flows: [{
