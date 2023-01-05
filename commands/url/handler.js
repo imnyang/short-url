@@ -242,10 +242,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                             ].map(component => new ActionRowBuilder().addComponents([component])))
                     , 1000 * 60 * 5);
                 } catch(e) {
-                    return i.followUp({
-                        content: '시간이 초과되었습니다.',
-                        ephemeral: true
-                    });
+                    return;
                 }
 
                 const url = response.fields.getTextInputValue('url');
@@ -347,10 +344,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                             time: 1000 * 60 * 5
                         });
                     } catch(e) {
-                        return i.followUp({
-                            content: '시간이 초과되었습니다.',
-                            ephemeral: true
-                        });
+                        return;
                     }
 
                     if(response.customId === 'cancel') return response.update(await getMessage(page, selectedFlowIndex));
@@ -375,10 +369,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                                 ).map(component => new ActionRowBuilder().addComponents([component])))
                         , 1000 * 60 * 5);
                     } catch(e) {
-                        return i.followUp({
-                            content: '시간이 초과되었습니다.',
-                            ephemeral: true
-                        });
+                        return;
                     }
 
                     for(let data of target.data) {
