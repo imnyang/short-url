@@ -59,7 +59,7 @@ app.get('/:url/info', async (req, res) => {
 
     const page = await Page.findOne({
         url: req.params.url
-    });
+    }).lean();
     if(!page) return res.status(404).end();
 
     const pageLogs = await Log.find({
