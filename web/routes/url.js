@@ -62,6 +62,11 @@ app.get('/:url/info', async (req, res) => {
     });
     if(!page) return res.status(404).end();
 
+    const pageLogs = await Log.find({
+        urlId: page.id
+    });
+    page.usedCount = pageLogs.length;
+
     res.end(JSON.stringify(page, null, 2));
 });
 
