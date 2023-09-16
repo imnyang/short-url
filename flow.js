@@ -12,7 +12,7 @@ module.exports.conditions = [
         name: '언어 확인',
         description: '사용자의 언어 설정을 확인합니다.',
         emoji: '🌐',
-        conditionFormat: '언어가 목록에 포함되어 있다면',
+        conditionFormat: '언어가 {locale}이라면',
         conditionCheck: (data, req) => data.locale.split(',').includes(req.get('Accept-Language')?.substring(0, 2) || 'en'),
         data: [
             {
