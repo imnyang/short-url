@@ -108,7 +108,7 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
                         .setCustomId('flow')
                         .addOptions(page.flows.map((a, i) => ({
                             label: `#${i + 1}. ${flow.getCondition(a.condition.id).conditionFormat} ${flow.getAction(a.action.id).actionFormat.replace('{index}', a.action.data?.index || '?')}`,
-                            description: page.flows.data ? Object.values(page.flows.data)[0]?.toString() : undefined,
+                            description: a.action.data ? Object.values(a.action.data)[0]?.toString() : undefined,
                             value: i.toString(),
                             default: i === selectedFlowIndex,
                             emoji: flow.getCondition(a.condition.id).emoji
