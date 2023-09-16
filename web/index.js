@@ -8,6 +8,8 @@ const setting = require('../setting.json');
 
 const app = express();
 
+app.set('trust proxy', setting.TRUST_PROXY);
+
 passport.serializeUser((user, done) => {
     done(null, user);
 });

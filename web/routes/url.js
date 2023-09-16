@@ -4,6 +4,7 @@ const main = require('../../main');
 const flow = require('../../flow');
 
 const Page = require('../../schemas/page');
+const Log = require('../../schemas/log');
 
 const app = express.Router();
 
@@ -16,6 +17,14 @@ app.get('/:url', async (req, res) => {
         url: req.params.url
     });
     if(!page) return res.status(404).end();
+
+    Log.create({
+        url: page.url,
+        urlId: page.id,
+        ip: req.ip,
+        userAgent: req.get('User-Agent'),
+        locale: req.get('Accept-Language')
+    }).then();
 
     let loopCount = 0;
     for(let i = 0; i < page.flows.length; i++) {
