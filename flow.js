@@ -105,7 +105,7 @@ module.exports.conditions = [
                 return false;
             }
 
-            return data.user.split(',').includes(req.user?.id);
+            return data.user.split(',').includes(req.user?.id) || /[a-zA_Z]/.test(data.user);
         },
         data: [
             {
