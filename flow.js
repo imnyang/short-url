@@ -162,7 +162,7 @@ module.exports.actions = [
         action: (data, req, res) => {
             let html = data.html;
             for(let key in req.user) {
-                html = html.replace(`{user.${key}}`, req.user[key]);
+                html = html.replaceAll(`{user.${key}}`, req.user[key]);
             }
             res.send(html);
         },
