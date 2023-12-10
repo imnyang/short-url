@@ -160,7 +160,9 @@ module.exports.actions = [
         emoji: '📄',
         actionFormat: 'HTML 전송',
         action: (data, req, res) => {
-            res.send(data.html);
+            res.send(data.html
+                .replaceAll('{user}', JSON.stringify(req.user ?? {}))
+            );
         },
         data: [
             {
