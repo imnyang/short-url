@@ -3,7 +3,9 @@ const {
     ButtonBuilder,
     ButtonStyle
 } = require('discord.js');
+const randomstring = require('randomstring');
 
+const main = require('../../main');
 const utils = require('../../utils');
 
 const Page = require('../../schemas/page');
@@ -11,8 +13,10 @@ const Page = require('../../schemas/page');
 module.exports = async interaction => {
     const { options } = interaction;
 
-    const customUrl = options.getString('customurl');
+    let customUrl = options.getString('customurl');
     const dest = options.getString('dest');
+
+    if(!customUrl) customUrl = randomstring.generate(main.getOwnerID().includes(interaction.user.id) ? 4 : 8);
 
     if(customUrl) {
         const checkPage = await Page.findOne({
