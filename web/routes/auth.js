@@ -15,9 +15,11 @@ app.get('/login', (req, res, next) => {
     res.redirect(req.session.redirect_url || '/');
 });
 
-app.get('/logout', (req, res) => {
-    req.logout();
-    res.redirect('/');
+app.get('/logout', (req, res, next) => {
+    req.logout(err => {
+        if(err) return next(err);
+        res.redirect('/');
+    });
 });
 
 app.get('/loginfail', (req, res) => {
