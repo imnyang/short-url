@@ -4,7 +4,7 @@ module.exports.conditions = [
         name: '모든 유저',
         description: '모두가 해당하는 조건입니다.',
         emoji: '👥',
-        conditionFormat: '모든 유저에게',
+        format: '모든 유저에게',
         conditionCheck: () => true
     },
     {
@@ -12,7 +12,7 @@ module.exports.conditions = [
         name: '언어 확인',
         description: '사용자의 언어 설정을 확인합니다.',
         emoji: '🌐',
-        conditionFormat: '언어가 {locale}이라면',
+        format: '언어가 {locale}이라면',
         conditionCheck: (data, req) => data.locale.split(',').includes(req.get('Accept-Language')?.substring(0, 2) || 'en'),
         data: [
             {
@@ -28,7 +28,7 @@ module.exports.conditions = [
         name: '기기 확인',
         description: '사용자의 기기를 확인합니다.',
         emoji: '🖥️',
-        conditionFormat: '기기가 목록에 포함되어 있다면',
+        format: '기기가 목록에 포함되어 있다면',
         conditionCheck: (data, req) => {
             const devices = data.device.split(',');
             if(devices.includes('DESKTOP') && req.useragent.isDesktop) return true;
@@ -98,7 +98,7 @@ module.exports.conditions = [
         name: '디스코드 사용자 확인',
         description: '특정 디스코드 계정만 접근할 수 있도록 합니다.',
         emoji: '🔒',
-        conditionFormat: '디스코드 계정이 목록에 있다면',
+        format: '디스코드 계정이 목록에 있다면',
         conditionCheck: (data, req, res) => {
             if(!req.isAuthenticated()) {
                 res.redirect(`/login?redirect_url=${encodeURIComponent(req.originalUrl)}`);
@@ -114,6 +114,27 @@ module.exports.conditions = [
                 required: true
             }
         ]
+    },
+    {
+        id: 'DATE',
+        name: '날짜 및 시간 확인',
+        description: '특정 날짜 이후인지 확인합니다.',
+        emoji: '🗓️',
+        format: '{date} 이후라면',
+        conditionCheck: data => {
+            const date = new Date(data.date);
+            return date.getTime() <= Date.now();
+        },
+        data: [
+            {
+                name: 'date',
+                label: '날짜',
+                placeholder: 'YYYY-MM-DD HH:mm:ss',
+                required: true,
+                validate: a => !isNaN(new Date(a)),
+                format: a => isNaN(new Date(a)) ? '?' : new Date(a).toLocaleString()
+            }
+        ]
     }
 ]
 
@@ -125,7 +146,7 @@ module.exports.actions = [
         name: '명령으로 이동',
         description: '특정 번호의 명령으로 이동합니다.',
         emoji: '🔀',
-        actionFormat: '#{index}번으로 이동',
+        format: '#{index}번으로 이동',
         action: null,
         data: [
             {
@@ -141,7 +162,7 @@ module.exports.actions = [
         name: 'URL로 리다이렉트',
         description: 'URL로 리다이렉트합니다.',
         emoji: '🔗',
-        actionFormat: 'URL로 리다이렉트',
+        format: 'URL로 리다이렉트',
         action: (data, req, res) => {
             res.redirect(data.url);
         },
@@ -158,7 +179,7 @@ module.exports.actions = [
         name: 'HTML 전송',
         description: 'HTML을 전송합니다.',
         emoji: '📄',
-        actionFormat: 'HTML 전송',
+        format: 'HTML 전송',
         action: (data, req, res) => {
             let html = data.html;
             for(let key in req.user) {
@@ -180,7 +201,7 @@ module.exports.actions = [
         name: '접근 거부',
         description: '접근을 거부합니다.',
         emoji: '🚫',
-        actionFormat: '접근 거부',
+        format: '접근 거부',
         action: (data, req, res) => {
             res.status(403).end();
         }

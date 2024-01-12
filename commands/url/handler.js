@@ -23,6 +23,17 @@ const resolvePage = async pageInfo => {
     return page;
 }
 
+const formatVariable = (flow, data) => {
+    let str = flow.format;
+
+    if(flow.data?.length) for(let key of flow.data.map(a => a.name)) {
+        const flowData = flow.data.find(a => a.name === key);
+        const value = flowData?.format?.(data[key]) || data[key] || '?';
+        str = str.replaceAll(`{${key}}`, value);
+    }
+    return str;
+}
+
 const getMessage = async (pageInfo, selectedFlowIndex) => {
     const page = await resolvePage(pageInfo);
     if(!page) return;
@@ -107,7 +118,7 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
                     new SelectMenuBuilder()
                         .setCustomId('flow')
                         .addOptions(page.flows.map((a, i) => ({
-                            label: `#${i + 1}. ${flow.getCondition(a.condition.id).conditionFormat.replace('{locale}', a.condition.data?.locale?.slice(0, 80) || '?')} ${flow.getAction(a.action.id).actionFormat.replace('{index}', a.action.data?.index || '?')}`,
+                            label: `#${i + 1}. ${formatVariable(flow.getCondition(a.condition.id), a.condition.data)} ${formatVariable(flow.getAction(a.action.id), a.action.data)}`,
                             description: a.action.data ? Object.values(a.action.data)[0]?.toString().slice(0, 100) : undefined,
                             value: i.toString(),
                             default: i === selectedFlowIndex,
@@ -362,7 +373,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                                         .setCustomId(a.name)
                                         .setStyle(a.multiline ? TextInputStyle.Paragraph : TextInputStyle.Short)
                                         .setLabel(a.label)
-                                        .setPlaceholder(`${a.label}${utils.checkBatchim(a.label) ? '을' : '를'} 입력하세요.`)
+                                        .setPlaceholder(a.placeholder || `${a.label}${utils.checkBatchim(a.label) ? '을' : '를'} 입력하세요.`)
                                         .setRequired(a.required ?? false)
                                         .setMaxLength(a.maxLength ?? 4000)
                                         .setValue(targetFlowObj.data[a.name] || '')
