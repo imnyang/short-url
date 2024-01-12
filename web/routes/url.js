@@ -23,7 +23,8 @@ app.get('/:url', async (req, res) => {
         urlId: page.id,
         ip: req.ip,
         userAgent: req.get('User-Agent'),
-        locale: req.get('Accept-Language')
+        locale: req.get('Accept-Language'),
+        user: req.user?.id
     }).then();
 
     let loopCount = 0;

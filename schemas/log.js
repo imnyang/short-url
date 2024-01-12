@@ -25,6 +25,9 @@ const newSchema = new Schema({
     },
     locale: {
         type: String
+    },
+    user: {
+        type: String
     }
 });
 
