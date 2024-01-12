@@ -32,6 +32,7 @@ const client = new Client({
         Partials.Channel
     ]
 });
+global.client = client;
 
 module.exports.getInviteURL = () => client.generateInvite({
     scopes: [

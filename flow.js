@@ -1,3 +1,9 @@
+const axios = require('axios');
+
+const discordApi = axios.create({
+    baseURL: 'https://discord.com/api/v10'
+});
+
 module.exports.conditions = [
     {
         id: 'EVERYONE',
@@ -133,6 +139,55 @@ module.exports.conditions = [
                 required: true,
                 validate: a => !isNaN(new Date(a)),
                 format: a => isNaN(new Date(a)) ? '?' : new Date(a).toLocaleString()
+            }
+        ]
+    },
+    {
+        id: 'DISCORD_MEMBER_CHECK',
+        name: '디스코드 서버 입장 확인',
+        description: '특정 디스코드 서버에 입장했는지 확인합니다.',
+        emoji: '🚪',
+        format: '{guild} 서버에 입장했다면',
+        conditionCheck: async (data, req, res) => {
+            const loginRedirect = () => res.redirect(`/login?redirect_url=${encodeURIComponent(req.originalUrl)}`);
+
+            if(!req.isAuthenticated()) {
+                loginRedirect();
+                return false;
+            }
+
+            const fetchedAt = new Date(req.user.fetchedAt);
+
+            let guilds;
+            if(req.user.guilds?.length && !isNaN(fetchedAt) && Date.now() - fetchedAt.getTime() < 1000 * 5) guilds = req.user.guilds;
+            else try {
+                const { data } = await discordApi.get('/users/@me/guilds', {
+                    headers: {
+                        Authorization: `Bearer ${req.user.accessToken}`
+                    }
+                });
+
+                guilds = data;
+            } catch(e) {
+                loginRedirect();
+                return false;
+            }
+
+            return guilds.some(g => g.id === data.guild);
+
+            // if(!req.user?.id) return false;
+            //
+            // const guild = await client.guilds.fetch(data.guild);
+            // const member = await guild.members.fetch(req.user.id).catch(() => null);
+            // return !!member;
+        },
+        data: [
+            {
+                name: 'guild',
+                label: '디스코드 서버 ID',
+                required: true,
+                validate: a => !isNaN(a),
+                format: a => client.guilds.cache.get(a)?.name || a || '?'
             }
         ]
     }
