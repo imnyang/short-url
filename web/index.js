@@ -1,6 +1,7 @@
 const express = require('express');
 const passport = require('passport');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const fs = require('fs');
 const useragent = require('express-useragent');
 
@@ -20,7 +21,11 @@ passport.deserializeUser((obj, done) => {
 app.use(session({
     secret: setting.SESSION_SECRET,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: `mongodb://${setting.MONGODB_USER}:${setting.MONGODB_PASSWORD}@${setting.MONGODB_HOST}:${setting.MONGODB_PORT}/admin`,
+        dbName: setting.DBNAME
+    })
 }));
 
 app.use(passport.initialize());
