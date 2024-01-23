@@ -254,7 +254,7 @@ client.on('interactionCreate', async interaction => {
             if(sameDomain) result = sameDomain;
         }
 
-        if(result && (ownerID === interaction.user.id || user.allowedDomains.includes(result.domain))) return result;
+        if(result && (teamOwner === interaction.user.id || user.allowedDomains.includes(result.domain))) return result;
 
         return null;
     }
