@@ -77,7 +77,12 @@ module.exports = async interaction => {
                         .setCustomId(`page_edit_${page.id}`)
                         .setStyle(ButtonStyle.Primary)
                         .setLabel('URL 수정')
-                        .setEmoji('✏️')
+                        .setEmoji('✏️'),
+                    new ButtonBuilder()
+                        .setCustomId(`page_delete_${page.id}`)
+                        .setStyle(ButtonStyle.Danger)
+                        .setLabel('URL 삭제')
+                        .setEmoji('🗑️')
                 ])
         ]
     });
