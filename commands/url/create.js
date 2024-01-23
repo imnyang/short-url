@@ -24,6 +24,7 @@ module.exports = async interaction => {
 
     if(customUrl) {
         const checkPage = await Page.findOne({
+            domain,
             url: customUrl
         });
         if(checkPage) return interaction.reply({
