@@ -1,6 +1,16 @@
 const { ApplicationCommandOptionType: Options } = require('discord.js');
 
+const main = require('../../main');
 const utils = require('../../utils');
+
+const Page = require('../../schemas/page');
+
+const Domain = require('../../domain.json');
+
+const choices = Domain.map(a => ({
+    name: a.domain,
+    value: a.domain
+}));
 
 module.exports = {
     info: {
@@ -14,13 +24,19 @@ module.exports = {
                 options: [
                     {
                         name: 'customurl',
-                        description: `커스텀 URL입니다. ${utils.formatUrl('custom')} 형식으로 표시됩니다.`.substring(0, 100),
+                        description: `커스텀 URL입니다. 루트 페이지를 수정하려면 /를 사용하세요. ${utils.formatUrl(Domain[0].domain, 'custom')} 형식으로 표시됩니다.`.substring(0, 100),
                         type: Options.String
                     },
                     {
                         name: 'dest',
                         description: 'URL이 이동할 대상입니다.',
                         type: Options.String
+                    },
+                    {
+                        name: 'domain',
+                        description: 'URL이 사용할 도메인입니다.',
+                        type: Options.String,
+                        choices
                     }
                 ]
             },
@@ -31,9 +47,10 @@ module.exports = {
                 options: [
                     {
                         name: 'url',
-                        description: '수정할 URL입니다.',
+                        description: '수정할 URL입니다. 루트 페이지를 수정하려면 /를 사용하세요.',
                         type: Options.String,
-                        required: true
+                        required: true,
+                        autocomplete: true
                     }
                 ]
             },
@@ -44,15 +61,43 @@ module.exports = {
                 options: [
                     {
                         name: 'url',
-                        description: '삭제할 URL입니다.',
+                        description: '삭제할 URL입니다. 루트 페이지를 수정하려면 /를 사용하세요.',
                         type: Options.String,
-                        required: true
+                        required: true,
+                        autocomplete: true
                     }
                 ]
             }
         ]
     },
-    checkPermission: utils.teamOnlyHandler,
+    checkPermission: async interaction => {
+        if(main.getTeamOwner() === interaction.user.id) return true;
+
+        const domain = interaction.options.getString('domain', false) ?? interaction.dbUser.selectedDomain;
+        const result = interaction.dbUser?.allowedDomains.includes(domain);
+
+        if(!result) await interaction.reply(utils.missingPermissionMessage(interaction, `${domain} 관리`));
+
+        return result;
+    },
     handler: utils.subCommandHandler('url'),
-    autoCompleteHandler: utils.autoCompleteHandler('url')
+    autoCompleteHandler: async interaction => {
+        const query = interaction.options.getString('url');
+        if(query) return interaction.respond([]);
+
+        const regex = new RegExp(query, 'i');
+        const pages = await Page.find({
+            url: {
+                $regex: regex
+            }
+        }).limit(50);
+
+        const result = pages.filter(a => a.domain === interaction.dbUser.selectedDomain).slice(0, 25);
+        if(result.length < 25) result.push(...pages.filter(a => a.domain !== interaction.dbUser.selectedDomain).slice(0, 25 - result.length));
+
+        return interaction.respond(result.map(a => ({
+            name: utils.formatUrl(Domain.find(d => d.domain === a.domain)?.domain, a.url),
+            value: `id/${a.id}`
+        })));
+    }
 }

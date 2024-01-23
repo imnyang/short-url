@@ -20,7 +20,10 @@ const awaitModalSubmit = require('await-modal-submit');
 const setting = require('./setting.json');
 const utils = require('./utils');
 
+const User = require('./schemas/user');
 const Page = require('./schemas/page');
+
+const Domain = require('./domain.json');
 
 const client = new Client({
     intents: [
@@ -89,7 +92,9 @@ const loadJejudo = () => {
         main: module.exports,
         utils,
         Discord: require('discord.js'),
-        Page
+        Page,
+        User,
+        Domain
     }
 
     JejudoHandler = new Jejudo(client, {
@@ -216,6 +221,44 @@ client.on('interactionCreate', async interaction => {
 
     if(JejudoHandler) JejudoHandler.handleInteraction(interaction);
 
+    let user = await User.findOne({
+        id: interaction.user.id
+    });
+    if(!user) {
+        user = new User({
+            id: interaction.user.id
+        });
+        await user.save();
+    }
+
+    if(!user.selectedDomain || Domain.some(d => d.domain === user.selectedDomain))
+        user.selectedDomain = user.allowedDomains[0] || Domain[0].domain;
+
+    interaction.dbUser = user;
+
+    interaction.resolvePage = async query => {
+        let result;
+
+        if(query.url.startsWith('id/')) {
+            query.id = query.url.slice(3);
+            delete query.url;
+        }
+
+        if(!query.domain) delete query.domain;
+
+        const pages = await Page.find(query);
+        if(!pages.length) return null;
+        if(pages.length === 1) result = pages[0];
+        else {
+            const sameDomain = pages.find(a => a.domain === user.selectedDomain);
+            if(sameDomain) result = sameDomain;
+        }
+
+        if(result && (ownerID === interaction.user.id || user.allowedDomains.includes(result.domain))) return result;
+
+        return null;
+    }
+
     if(interaction.isChatInputCommand() || interaction.isContextMenuCommand()) {
         if(!interaction.commandName) return;
 
@@ -229,7 +272,7 @@ client.on('interactionCreate', async interaction => {
         }
     }
 
-    if(interaction.isSelectMenu()) {
+    if(interaction.isStringSelectMenu()) {
         const params = interaction.values[0].split('_');
         const handler = selectHandler[params[0]];
         if(handler) handler(interaction);

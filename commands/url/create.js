@@ -10,13 +10,17 @@ const utils = require('../../utils');
 
 const Page = require('../../schemas/page');
 
+const Domain = require('../../domain.json');
+
 module.exports = async interaction => {
     const { options } = interaction;
 
+    let domain = options.getString('domain');
     let customUrl = options.getString('customurl');
     const dest = options.getString('dest');
 
-    if(!customUrl) customUrl = randomstring.generate(main.getOwnerID().includes(interaction.user.id) ? 4 : 8);
+    domain ??= interaction.dbUser.selectedDomain || Domain[0].domain;
+    customUrl ??= randomstring.generate(main.getOwnerID().includes(interaction.user.id) ? 4 : 8);
 
     if(customUrl) {
         const checkPage = await Page.findOne({
@@ -28,7 +32,13 @@ module.exports = async interaction => {
         });
     }
 
+    if(customUrl !== '/' && customUrl.includes('/') && customUrl.startsWith('@')) return interaction.reply({
+        content: 'URL에는 `/`나 `@`를 포함할 수 없습니다.',
+        ephemeral: true
+    });
+
     const page = new Page({
+        domain,
         url: customUrl,
         flows: [{
             condition: {
@@ -47,7 +57,7 @@ module.exports = async interaction => {
     await page.save();
 
     return interaction.reply({
-        content: `URL을 생성했습니다: ${utils.formatUrl(page.url)}\nURL을 수정하려면 아래 버튼을 누르세요.`,
+        content: `URL을 생성했습니다: ${utils.formatUrl(page.domain, page.url)}\nURL을 수정하려면 아래 버튼을 누르세요.`,
         components: [
             new ActionRowBuilder()
                 .addComponents([

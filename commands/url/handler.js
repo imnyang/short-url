@@ -3,7 +3,7 @@ const {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle,
-    SelectMenuBuilder,
+    StringSelectMenuBuilder,
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle
@@ -55,7 +55,7 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
                 .addFields([
                     {
                         name: 'URL',
-                        value: utils.formatUrl(page.url),
+                        value: utils.formatUrl(page.domain, page.url),
                         inline: true
                     },
                     {
@@ -91,7 +91,7 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
                 ]),
             new ActionRowBuilder()
                 .addComponents([
-                    new SelectMenuBuilder()
+                    new StringSelectMenuBuilder()
                         .setCustomId('condition')
                         .setOptions(flow.conditions.map(a => ({
                             label: a.name,
@@ -103,7 +103,7 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
                 ]),
             new ActionRowBuilder()
                 .addComponents([
-                    new SelectMenuBuilder()
+                    new StringSelectMenuBuilder()
                         .setCustomId('action')
                         .setOptions(flow.actions.map(a => ({
                             label: a.name,
@@ -115,7 +115,7 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
                 ]),
             new ActionRowBuilder()
                 .addComponents([
-                    new SelectMenuBuilder()
+                    new StringSelectMenuBuilder()
                         .setCustomId('flow')
                         .addOptions(page.flows.map((a, i) => ({
                             label: `#${i + 1}. ${formatVariable(flow.getCondition(a.condition.id), a.condition.data)} ${formatVariable(flow.getAction(a.action.id), a.action.data)}`,
@@ -236,7 +236,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                                     .setCustomId('url')
                                     .setStyle(TextInputStyle.Short)
                                     .setLabel('URL')
-                                    .setPlaceholder(`${utils.formatUrl('custom')} 형식으로 표시됩니다.`)
+                                    .setPlaceholder(`${utils.formatUrl(page.domain, 'custom')} 형식으로 표시됩니다.`)
                                     .setValue(page.url),
                                 new TextInputBuilder()
                                     .setCustomId('expiresAt')
@@ -328,7 +328,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                         components: [
                             new ActionRowBuilder()
                                 .addComponents([
-                                    new SelectMenuBuilder()
+                                    new StringSelectMenuBuilder()
                                         .setCustomId('option')
                                         .addOptions(data[0].choices.map(a => ({
                                             label: a.label,
@@ -407,7 +407,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
             }
         }
 
-        if(i.isSelectMenu()) {
+        if(i.isStringSelectMenu()) {
             if(i.customId === 'condition') page.flows[selectedFlowIndex].condition = {
                 id: i.values[0],
                 data: {}

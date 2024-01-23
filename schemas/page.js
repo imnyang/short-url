@@ -11,6 +11,11 @@ const newSchema = new Schema({
         index: true,
         default: uniqueString
     },
+    domain: {
+        type: String,
+        required: true,
+        index: true
+    },
     url: {
         type: String,
         required: true,

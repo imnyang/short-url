@@ -4,14 +4,15 @@ const {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle,
-    SelectMenuBuilder
+    StringSelectMenuBuilder
 } = require('discord.js');
 const Url = require('url');
 const querystring = require('querystring');
 const fs = require('fs');
 
 const main = require('./main');
-const setting = require('./setting.json');
+
+const Domain = require('./domain.json');
 
 let client;
 
@@ -302,7 +303,7 @@ module.exports.disableComponents = (components = [], except, customIdExactMatch 
                         newComponent = ButtonBuilder.from(c);
                         break;
                     case ComponentType.SelectMenu:
-                        newComponent = SelectMenuBuilder.from(c);
+                        newComponent = StringSelectMenuBuilder.from(c);
                         break;
                     default:
                         return c;
@@ -396,12 +397,15 @@ module.exports.getAllUrlInString = str => {
 module.exports.parseUrl = str => {
     try {
         const url = new URL(str);
-        return url.pathname.substring(1);
+        return {
+            domain: url.hostname,
+            url: url.pathname.substring(1)
+        }
     } catch(e) {
         return str;
     }
 }
 
-module.exports.formatUrl = str => {
-    return new URL(str, setting.BASE_URL).href;
+module.exports.formatUrl = (domain, str) => {
+    return new URL(str, Domain.find(d => d.domain === domain)?.base ?? 'https://unknown').href;
 }

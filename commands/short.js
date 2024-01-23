@@ -6,6 +6,8 @@ const utils = require('../utils');
 
 const Page = require('../schemas/page');
 
+const Domain = require('../domain.json');
+
 module.exports = {
     info: {
         name: 'short',
@@ -28,6 +30,7 @@ module.exports = {
         });
 
         const page = new Page({
+            domain: interaction.dbUser.selectedDomain || Domain[0].domain,
             url: randomstring.generate(main.getOwnerID().includes(interaction.user.id) ? 4 : 8),
             flows: [{
                 condition: {
@@ -44,6 +47,6 @@ module.exports = {
         });
         await page.save();
 
-        return interaction.reply(utils.formatUrl(page.url));
+        return interaction.reply(utils.formatUrl(page.domain, page.url));
     }
 }

@@ -3,18 +3,18 @@ const express = require('express');
 const main = require('../../main');
 const flow = require('../../flow');
 
+const User = require('../../schemas/user');
 const Page = require('../../schemas/page');
 const Log = require('../../schemas/log');
 
 const app = express.Router();
 
-app.get('/', (req, res) => {
-    res.redirect(main.getInviteURL());
-});
+app.get('/:url?', async (req, res) => {
+    const url = req.params.url ?? '/';
 
-app.get('/:url', async (req, res) => {
     const page = await Page.findOne({
-        url: req.params.url
+        domain: req.hostname,
+        url
     });
     if(!page) return res.status(404).end();
 
@@ -56,10 +56,17 @@ app.get('/:url', async (req, res) => {
 app.get('/:url/info', async (req, res) => {
     if(!req.isAuthenticated()) return res.redirect(`/login?redirect_url=${encodeURIComponent(req.originalUrl)}`);
 
-    if(!main.getOwnerID().includes(req.user.id)) return res.status(403).end();
+    const user = await User.findOne({
+        id: req.user.id
+    });
+    if(!main.getOwnerID().includes(req.user.id) && !user.allowedDomains.includes(req.hostname)) return res.status(403).end();
+
+    let url = req.params.url;
+    if(url === '@root') url = '/';
 
     const page = await Page.findOne({
-        url: req.params.url
+        domain: req.hostname,
+        url
     }).lean();
     if(!page) return res.status(404).end();
 

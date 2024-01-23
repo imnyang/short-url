@@ -4,8 +4,6 @@
   "DISCORD_CLIENT_ID": "",
   "DISCORD_CLIENT_SECRET": "",
 
-  "BASE_URL": "https://example.com",
-
   "PORT": 3000,
   "TRUST_PROXY": false,
   "SESSION_SECRET": "secret",
