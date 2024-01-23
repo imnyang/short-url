@@ -83,7 +83,7 @@ module.exports = {
     handler: utils.subCommandHandler('url'),
     autoCompleteHandler: async interaction => {
         const query = interaction.options.getString('url');
-        if(query) return interaction.respond([]);
+        if(!query) return interaction.respond([]);
 
         const regex = new RegExp(query, 'i');
         const pages = await Page.find({
