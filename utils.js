@@ -402,7 +402,9 @@ module.exports.parseUrl = str => {
             url: url.pathname.substring(1)
         }
     } catch(e) {
-        return str;
+        return {
+            url: str
+        }
     }
 }
 
