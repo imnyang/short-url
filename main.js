@@ -236,6 +236,8 @@ client.on('interactionCreate', async interaction => {
 
     interaction.dbUser = user;
 
+    interaction.teamOwner = teamOwner === interaction.user.id;
+
     interaction.resolvePage = async query => {
         let result;
 
