@@ -19,6 +19,12 @@ module.exports = async interaction => {
     let customUrl = options.getString('customurl');
     const dest = options.getString('dest');
 
+    if(!domain) {
+        const parsedUrl = utils.parseUrl(customUrl);
+        domain = parsedUrl.domain;
+        customUrl = parsedUrl.url;
+    }
+
     domain ??= interaction.dbUser.selectedDomain || Domain[0].domain;
     customUrl ??= randomstring.generate(main.getOwnerID().includes(interaction.user.id) ? 4 : 8);
 
