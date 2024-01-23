@@ -76,7 +76,9 @@ module.exports = {
         const domain = interaction.options.getString('domain', false) ?? interaction.dbUser.selectedDomain;
         const result = interaction.dbUser?.allowedDomains.includes(domain);
 
-        if(!result) await interaction.reply(utils.missingPermissionMessage(interaction, `${domain} 관리`));
+        const permLength = interaction.dbUser?.allowedDomains.length || 0;
+
+        if(!result) await interaction.reply(utils.missingPermissionMessage(interaction, permLength ? `${domain} 관리` : '도메인 관리'));
 
         return result;
     },
