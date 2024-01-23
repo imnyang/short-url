@@ -19,7 +19,6 @@ const newSchema = new Schema({
     url: {
         type: String,
         required: true,
-        unique: true,
         index: true,
         default: () => randomstring.generate(8)
     },
@@ -37,6 +36,13 @@ const newSchema = new Schema({
         type: String,
         required: true
     }
+});
+
+newSchema.index({
+    domain: 1,
+    url: 1
+}, {
+    unique: true
 });
 
 module.exports = mongoose.model('Page', newSchema);
