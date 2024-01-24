@@ -12,6 +12,9 @@ module.exports = async interaction => {
         $addToSet: {
             allowedDomains: domain
         }
+    }, {
+        upsert: true,
+        setDefaultsOnInsert: true
     });
 
     return interaction.reply(`${user.displayName}님에게 ${domain} 도메인의 접근 권한을 부여했습니다.`);
