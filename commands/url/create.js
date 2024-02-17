@@ -19,7 +19,7 @@ module.exports = async interaction => {
     let customUrl = options.getString('customurl');
     const dest = options.getString('dest');
 
-    if(!domain && customUrl.includes('/')) {
+    if(!domain && customUrl?.includes('/')) {
         const parsedUrl = utils.parseUrl(customUrl);
         domain = parsedUrl.domain;
         customUrl = parsedUrl.url;
