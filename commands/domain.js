@@ -27,7 +27,9 @@ module.exports = {
     },
     handler: async interaction => {
         const domain = interaction.options.getString('domain');
-        if(main.getTeamOwner() !== interaction.user.id && !interaction.dbUser.allowedDomains.includes(domain)) return interaction.reply({
+        if(main.getTeamOwner() !== interaction.user.id
+            && domain !== Domain[0].domain
+            && !interaction.dbUser.allowedDomains.includes(domain)) return interaction.reply({
             content: '해당 도메인을 사용할 권한이 없습니다.',
             ephemeral: true
         });
