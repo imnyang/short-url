@@ -21,6 +21,16 @@ module.exports = {
             }
         ]
     },
+    checkPermission: async interaction => {
+        const domain = interaction.dbUser.selectedDomain;
+
+        if(domain === Domain[0].domain || main.getTeamOwner() === interaction.user.id) return true;
+
+        const result = interaction.dbUser?.allowedDomains.includes(domain);
+        if(!result) await interaction.reply(utils.missingPermissionMessage(interaction, `${domain} 관리`));
+
+        return result;
+    },
     handler: async interaction => {
         const url = interaction.options.getString('url');
 
