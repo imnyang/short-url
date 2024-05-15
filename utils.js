@@ -396,7 +396,10 @@ module.exports.getAllUrlInString = str => {
 
 module.exports.parseUrl = str => {
     try {
-        if(str.includes('/') && !str.startsWith('http') && str.length > 1) str = `https://${str}`;
+        if(str.includes('/')
+            && str.split('/')[0].includes('.')
+            && !str.startsWith('http')
+            && str.length > 1) str = `https://${str}`;
 
         const url = new URL(str);
         return {
