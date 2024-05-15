@@ -258,6 +258,11 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
 
                 const url = response.fields.getTextInputValue('url');
 
+                if(!utils.validateCustomUrl(url)) return response.reply({
+                    content: 'URL로 사용할 수 없는 문자열이 포함돼 수정되지 않았습니다.',
+                    ephemeral: true
+                });
+
                 let expiresAt;
                 const expiresAtStr = response.fields.getTextInputValue('expiresAt');
                 if(expiresAtStr) {

@@ -416,3 +416,10 @@ module.exports.parseUrl = str => {
 module.exports.formatUrl = (domain, str) => {
     return new URL(str, Domain.find(d => d.domain === domain)?.base ?? 'https://unknown').href;
 }
+
+module.exports.validateCustomUrl = str => !((str !== '/' && str.startsWith('/'))
+    || str.includes('//')
+    || str.includes('.')
+    || str.startsWith('_')
+    || str.endsWith('/info')
+    || str.startsWith('@'));
