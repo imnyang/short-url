@@ -49,6 +49,8 @@ app.get('/*', async (req, res) => {
         const parts = wildcardPage.url.split('/');
         const wildcardVars = {};
 
+        if(parts.length !== urlParts.length) continue;
+
         for(let i in parts) {
             const thisPart = parts[i];
             const urlPart = urlParts[i];
