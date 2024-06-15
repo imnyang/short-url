@@ -37,6 +37,8 @@ const client = new Client({
 });
 global.client = client;
 
+global.wildcardPages = {};
+
 module.exports.getInviteURL = () => client.generateInvite({
     scopes: [
         OAuth2Scopes.Bot,

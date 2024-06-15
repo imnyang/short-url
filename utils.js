@@ -417,9 +417,21 @@ module.exports.formatUrl = (domain, str) => {
     return new URL(str, Domain.find(d => d.domain === domain)?.base ?? 'https://unknown').href;
 }
 
-module.exports.validateCustomUrl = str => !((str !== '/' && str.startsWith('/'))
+module.exports.validateCustomUrl = (str, isAdmin = false) => !((str !== '/' && str.startsWith('/'))
     || str.includes('//')
     || str.includes('.')
     || str.startsWith('_')
     || str.endsWith('/info')
-    || str.startsWith('@'));
+    || str.startsWith('@')
+    || (!isAdmin && str.includes(':'))
+    || str.split('/').some(a => a === ':' || a.slice(1).includes(':')));
+
+module.exports.formatVariable = (str, variables, prefix = '') => {
+    for(let key in variables) {
+        const value = variables[key];
+
+        if(typeof value === 'object') str = module.exports.formatVariable(str, value, `${prefix}${key}.`);
+        else str = str.replaceAll(`{${prefix}${key}}`, value);
+    }
+    return str;
+}

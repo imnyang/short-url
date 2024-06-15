@@ -44,7 +44,7 @@ module.exports = async interaction => {
         });
     }
 
-    if(!utils.validateCustomUrl(customUrl)) return interaction.reply({
+    if(!utils.validateCustomUrl(customUrl, interaction.teamOwner)) return interaction.reply({
         content: 'URL로 사용할 수 없는 문자열입니다.',
         ephemeral: true
     });
@@ -67,6 +67,8 @@ module.exports = async interaction => {
         creator: interaction.user.id
     });
     await page.save();
+
+    if(page.url.includes(':')) global.wildcardPages[page.id] = page.toObject();
 
     return interaction.reply({
         content: `URL을 생성했습니다: ${utils.formatUrl(page.domain, page.url)}\nURL을 수정하려면 아래 버튼을 누르세요.`,

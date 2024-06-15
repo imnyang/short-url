@@ -16,5 +16,7 @@ module.exports = async interaction => {
         id: page.id
     });
 
+    if(page.url.includes(':')) delete global.wildcardPages[page.id];
+
     return interaction.reply(`${utils.formatUrl(page.domain, page.url)} URL을 삭제했습니다.`);
 }

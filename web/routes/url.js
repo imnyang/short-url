@@ -35,13 +35,44 @@ app.get('/*/info', async (req, res) => {
 });
 
 app.get('/*', async (req, res) => {
-    const url = req.path.slice(1) || '/';
+    console.log(global.wildcardPages);
 
-    const page = await Page.findOne({
+    const url = req.path.slice(1) || '/';
+    const urlParts = url.split('/');
+
+    const vars = {};
+
+    let page;
+    outer: for(let wildcardPage of Object.values(global.wildcardPages)) {
+        if(wildcardPage.domain !== req.hostname) continue;
+
+        const parts = wildcardPage.url.split('/');
+        const wildcardVars = {};
+
+        for(let i in parts) {
+            const thisPart = parts[i];
+            const urlPart = urlParts[i];
+
+            if(thisPart.startsWith(':')) {
+                wildcardVars[thisPart.slice(1)] = urlPart;
+                continue;
+            }
+            if(thisPart !== urlPart) continue outer;
+        }
+
+        page = wildcardPage;
+        for(let key in wildcardVars) vars[key] ??= wildcardVars[key];
+        break;
+    }
+
+    if(!page) page = await Page.findOne({
         domain: req.hostname,
         url
     });
+
     if(!page) return res.status(404).end();
+
+    if(req.user) vars.user = req.user;
 
     Log.create({
         url: page.url,
@@ -72,7 +103,7 @@ app.get('/*', async (req, res) => {
             continue;
         }
 
-        await action.action(f.action.data, req, res);
+        await action.action(f.action.data, vars, req, res);
     }
 
     res.status(406).end();

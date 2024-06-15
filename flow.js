@@ -1,5 +1,7 @@
 const axios = require('axios');
 
+const utils = require('./utils');
+
 const discordApi = axios.create({
     baseURL: 'https://discord.com/api/v10'
 });
@@ -218,8 +220,8 @@ module.exports.actions = [
         description: 'URL로 리다이렉트합니다.',
         emoji: '🔗',
         format: 'URL로 리다이렉트',
-        action: (data, req, res) => {
-            res.redirect(data.url);
+        action: (data, vars, req, res) => {
+            res.redirect(utils.formatVariable(data.url, vars));
         },
         data: [
             {
@@ -235,12 +237,8 @@ module.exports.actions = [
         description: 'HTML을 전송합니다.',
         emoji: '📄',
         format: 'HTML 전송',
-        action: (data, req, res) => {
-            let html = data.html;
-            for(let key in req.user) {
-                html = html.replaceAll(`{user.${key}}`, req.user[key]);
-            }
-            res.send(html);
+        action: (data, vars, req, res) => {
+            res.send(utils.formatVariable(data.html, vars));
         },
         data: [
             {
@@ -257,7 +255,7 @@ module.exports.actions = [
         description: '접근을 거부합니다.',
         emoji: '🚫',
         format: '접근 거부',
-        action: (data, req, res) => {
+        action: (data, vars, req, res) => {
             res.status(403).end();
         }
     }

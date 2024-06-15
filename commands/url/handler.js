@@ -163,8 +163,10 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
 }
 module.exports.getMessage = getMessage;
 
-module.exports.handleMessage = async (pageInfo, message, user) => {
-    if(!message || !user) return;
+module.exports.handleMessage = async (pageInfo, message, interaction) => {
+    if(!message || !interaction) return;
+
+    const user = interaction.user;
 
     const page = await resolvePage(pageInfo);
     if(!page) return;
@@ -202,9 +204,13 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
                     }
                 }
 
-                await Page.updateOne({
+                const newPage = await Page.findOneAndUpdate({
                     id: page.id
-                }, page);
+                }, page, {
+                    new: true
+                });
+
+                if(newPage.url.includes(':')) global.wildcardPages[newPage.id] = newPage.toObject();
 
                 return i.update(await getMessage(page, selectedFlowIndex));
             }
@@ -258,7 +264,7 @@ module.exports.handleMessage = async (pageInfo, message, user) => {
 
                 const url = response.fields.getTextInputValue('url');
 
-                if(!utils.validateCustomUrl(url)) return response.reply({
+                if(!utils.validateCustomUrl(url, interaction.teamOwner)) return response.reply({
                     content: 'URL로 사용할 수 없는 문자열이 포함돼 수정되지 않았습니다.',
                     ephemeral: true
                 });

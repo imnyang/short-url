@@ -3,13 +3,25 @@ const fs = require('fs');
 
 const setting = require('../setting.json');
 
+const Page = require('./page');
+
 module.exports = () => {
     const connect = () => {
         mongoose.connect(`mongodb://${setting.MONGODB_USER}:${setting.MONGODB_PASSWORD}@${setting.MONGODB_HOST}:${setting.MONGODB_PORT}/admin`, {
             dbName: setting.DBNAME
-        }, e => {
+        }, async e => {
             if(e) console.error(e);
             else console.log(`MongoDB connected.`);
+
+            const pages = await Page.find({
+                url: {
+                    $regex: /:/
+                }
+            }).lean();
+
+            for(let page of pages) {
+                global.wildcardPages[page.id] = page;
+            }
         });
     }
     connect();

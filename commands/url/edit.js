@@ -14,5 +14,5 @@ module.exports = async interaction => {
     });
 
     const msg = await interaction.reply(await handler.getMessage(page));
-    return handler.handleMessage(page, msg, interaction.user);
+    return handler.handleMessage(page, msg, interaction);
 }
