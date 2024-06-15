@@ -435,3 +435,32 @@ module.exports.formatVariable = (str, variables, prefix = '') => {
     }
     return str;
 }
+
+module.exports.findWildcardPage = (domain, url) => {
+    const urlParts = url.split('/');
+
+    outer: for(let wildcardPage of Object.values(global.wildcardPages)) {
+        if(wildcardPage.domain !== domain) continue;
+
+        const parts = wildcardPage.url.split('/');
+        const wildcardVars = {};
+
+        if(parts.length !== urlParts.length) continue;
+
+        for(let i in parts) {
+            const thisPart = parts[i];
+            const urlPart = urlParts[i];
+
+            if(thisPart.startsWith(':')) {
+                wildcardVars[thisPart.slice(1)] = urlPart;
+                continue;
+            }
+            if(thisPart !== urlPart) continue outer;
+        }
+
+        return {
+            page: wildcardPage,
+            vars: wildcardVars
+        }
+    }
+}

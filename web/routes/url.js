@@ -1,6 +1,7 @@
 const express = require('express');
 
 const main = require('../../main');
+const utils = require('../../utils');
 const flow = require('../../flow');
 
 const User = require('../../schemas/user');
@@ -20,7 +21,12 @@ app.get('/*/info', async (req, res) => {
     let url = req.path.slice(1).split('/').slice(0, -1).join('/');
     if(url === '@root') url = '/';
 
-    const page = await Page.findOne({
+    let page;
+
+    const wildcardPage = utils.findWildcardPage(req.hostname, url);
+
+    if(wildcardPage) page = wildcardPage.page;
+    else page = await Page.findOne({
         domain: req.hostname,
         url
     }).lean();
@@ -35,39 +41,19 @@ app.get('/*/info', async (req, res) => {
 });
 
 app.get('/*', async (req, res) => {
-    console.log(global.wildcardPages);
-
     const url = req.path.slice(1) || '/';
-    const urlParts = url.split('/');
 
     const vars = {};
 
     let page;
-    outer: for(let wildcardPage of Object.values(global.wildcardPages)) {
-        if(wildcardPage.domain !== req.hostname) continue;
 
-        const parts = wildcardPage.url.split('/');
-        const wildcardVars = {};
+    const wildcardPage = utils.findWildcardPage(req.hostname, url);
 
-        if(parts.length !== urlParts.length) continue;
-
-        for(let i in parts) {
-            const thisPart = parts[i];
-            const urlPart = urlParts[i];
-
-            if(thisPart.startsWith(':')) {
-                wildcardVars[thisPart.slice(1)] = urlPart;
-                continue;
-            }
-            if(thisPart !== urlPart) continue outer;
-        }
-
-        page = wildcardPage;
-        for(let key in wildcardVars) vars[key] ??= wildcardVars[key];
-        break;
+    if(wildcardPage) {
+        page = wildcardPage.page;
+        for(let key in wildcardPage.vars) vars[key] = wildcardPage.vars[key];
     }
-
-    if(!page) page = await Page.findOne({
+    else page = await Page.findOne({
         domain: req.hostname,
         url
     });
