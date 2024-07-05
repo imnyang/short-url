@@ -55,6 +55,7 @@ module.exports.conditions = [
                 name: 'device',
                 label: '기기',
                 required: true,
+                allowMultiple: true,
                 choices: [
                     {
                         name: 'DESKTOP',
@@ -96,8 +97,7 @@ module.exports.conditions = [
                         label: 'iPhone',
                         emoji: '📱'
                     }
-                ],
-                allowMultiple: true
+                ]
             }
         ]
     },
@@ -123,6 +123,7 @@ module.exports.conditions = [
                 name: 'browser',
                 label: '브라우저',
                 required: true,
+                allowMultiple: true,
                 choices: [
                     {
                         name: 'CHROME',
