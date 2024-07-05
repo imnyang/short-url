@@ -122,7 +122,7 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
                             description: a.action.data ? Object.values(a.action.data)[0]?.toString().slice(0, 100) : undefined,
                             value: i.toString(),
                             default: i === selectedFlowIndex,
-                            emoji: flow.getCondition(a.condition.id).emoji
+                            emoji: flow.getConditionEmoji(a.condition)
                         })))
                 ]),
             new ActionRowBuilder()
@@ -372,6 +372,7 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                     if(response.customId === 'cancel') return response.update(await getMessage(page, selectedFlowIndex));
 
                     targetFlowObj.data[data[0].name] = response.values.join(',');
+                    return response.update(await getMessage(page, selectedFlowIndex));
                 }
                 else {
                     let response;
@@ -424,12 +425,14 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                 data: {}
             }
 
-            if(i.customId === 'action') page.flows[selectedFlowIndex].action = {
+            else if(i.customId === 'action') page.flows[selectedFlowIndex].action = {
                 id: i.values[0],
                 data: {}
             }
 
-            if(i.customId === 'flow') selectedFlowIndex = Number(i.values[0]);
+            else if(i.customId === 'flow') selectedFlowIndex = Number(i.values[0]);
+
+            else return;
 
             return i.update(await getMessage(page, selectedFlowIndex));
         }

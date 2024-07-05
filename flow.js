@@ -19,7 +19,7 @@ module.exports.conditions = [
         id: 'LOCALE',
         name: '언어 확인',
         description: '사용자의 언어 설정을 확인합니다.',
-        emoji: '🌐',
+        emoji: '🔠',
         format: '언어가 {locale}이라면',
         conditionCheck: (data, req) => data.locale.split(',').includes(req.get('Accept-Language')?.substring(0, 2) || 'en'),
         data: [
@@ -105,7 +105,7 @@ module.exports.conditions = [
         id: 'BROWSER',
         name: '브라우저 확인',
         description: '사용자의 브라우저를 확인합니다.',
-        emoji: '1258686940765618176',
+        emoji: '🌐',
         format: '브라우저가 목록에 포함되어 있다면',
         conditionCheck: (data, req) => {
             const browsers = data.browser.split(',');
@@ -254,6 +254,19 @@ module.exports.conditions = [
 ]
 
 module.exports.getCondition = id => module.exports.conditions.find(condition => condition.id === id);
+
+module.exports.getConditionEmoji = condition => {
+    const conditionInfo = module.exports.getCondition(condition.id);
+
+    const firstDataInfo = conditionInfo.data?.[0];
+    if(firstDataInfo?.choices) {
+        const selectedData = condition.data[firstDataInfo.name]?.split(',');
+        const selectedDataInfo = firstDataInfo.choices.find(c => c.name === selectedData?.[0]);
+        if(selectedDataInfo?.emoji) return selectedDataInfo.emoji;
+    }
+
+    return conditionInfo.emoji;
+}
 
 module.exports.actions = [
     {
