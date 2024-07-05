@@ -102,6 +102,63 @@ module.exports.conditions = [
         ]
     },
     {
+        id: 'BROWSER',
+        name: '브라우저 확인',
+        description: '사용자의 브라우저를 확인합니다.',
+        emoji: '1258686940765618176',
+        format: '브라우저가 목록에 포함되어 있다면',
+        conditionCheck: (data, req) => {
+            const browsers = data.browser.split(',');
+            if(browsers.includes('CHROME') && req.useragent.isChrome) return true;
+            if(browsers.includes('SAFARI') && req.useragent.isSafari) return true;
+            if(browsers.includes('FIREFOX') && req.useragent.isFirefox) return true;
+            if(browsers.includes('EDGE') && req.useragent.isEdge) return true;
+            if(browsers.includes('OPERA') && req.useragent.isOpera) return true;
+            if(browsers.includes('IE') && req.useragent.isIE) return true;
+
+            return false;
+        },
+        data: [
+            {
+                name: 'browser',
+                label: '브라우저',
+                required: true,
+                choices: [
+                    {
+                        name: 'CHROME',
+                        label: 'Chrome',
+                        emoji: '1258686940765618176'
+                    },
+                    {
+                        name: 'SAFARI',
+                        label: 'Safari',
+                        emoji: '1258686955718443008'
+                    },
+                    {
+                        name: 'FIREFOX',
+                        label: 'Firefox',
+                        emoji: '1258687134395662347'
+                    },
+                    {
+                        name: 'EDGE',
+                        label: 'Edge',
+                        emoji: '1258687080704376923'
+                    },
+                    {
+                        name: 'OPERA',
+                        label: 'Opera',
+                        emoji: '1258686942493675530'
+                    },
+                    {
+                        name: 'IE',
+                        label: 'Internet Explorer',
+                        emoji: '1258686938484052028'
+                    }
+                ]
+            }
+        ]
+    },
+    {
         id: 'DISCORD_USER',
         name: '디스코드 사용자 확인',
         description: '특정 디스코드 계정만 접근할 수 있도록 합니다.',
