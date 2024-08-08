@@ -86,7 +86,9 @@ module.exports = {
     checkPermission: async interaction => {
         if(main.getTeamOwner() === interaction.user.id) return true;
 
-        const domain = interaction.options.getString('domain', false) ?? interaction.dbUser.selectedDomain;
+        const parsedUrl = utils.parseUrl(interaction.options.getString('url', false));
+
+        const domain = parsedUrl.domain ?? interaction.options.getString('domain', false) ?? interaction.dbUser.selectedDomain;
         const result = interaction.dbUser?.allowedDomains.includes(domain);
 
         const permLength = interaction.dbUser?.allowedDomains.length || 0;
@@ -108,7 +110,7 @@ module.exports = {
         }).limit(50);
 
         const result = pages.filter(a => a.domain === interaction.dbUser.selectedDomain).slice(0, 25);
-        if(result.length < 25) result.push(...pages.filter(a => a.domain !== interaction.dbUser.selectedDomain).slice(0, 25 - result.length));
+        if(result.length < 25) result.push(...pages.filter(a => a.domain !== interaction.dbUser.selectedDomain && (interaction.teamOwner || interaction.dbUser.allowedDomains.includes(a.domain))).slice(0, 25 - result.length));
 
         return interaction.respond(result.map(a => ({
             name: utils.formatUrl(Domain.find(d => d.domain === a.domain)?.domain, a.url),
