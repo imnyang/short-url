@@ -67,6 +67,19 @@ module.exports = {
                         autocomplete: true
                     }
                 ]
+            },
+            {
+                name: 'list',
+                description: '도메인의 URL 목록을 표시합니다.',
+                type: Options.Subcommand,
+                options: [
+                    {
+                        name: 'domain',
+                        description: 'URL 목록을 확인할 도메인입니다.',
+                        type: Options.String,
+                        choices
+                    }
+                ]
             }
         ]
     },
