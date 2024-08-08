@@ -233,12 +233,12 @@ client.on('interactionCreate', async interaction => {
         await user.save();
     }
 
-    if(!user.selectedDomain || !Domain.some(d => d.domain === user.selectedDomain))
-        user.selectedDomain = user.allowedDomains[0] || Domain[0].domain;
-
     interaction.dbUser = user;
 
     interaction.teamOwner = teamOwner === interaction.user.id;
+
+    if(!user.selectedDomain || !Domain.some(d => d.domain === user.selectedDomain) || (!interaction.teamOwner && !user.allowedDomains.includes(user.selectedDomain)))
+        user.selectedDomain = user.allowedDomains[0] || Domain[0].domain;
 
     interaction.resolvePage = async query => {
         let result;
