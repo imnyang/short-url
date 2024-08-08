@@ -99,10 +99,12 @@ module.exports = {
     },
     handler: utils.subCommandHandler('url'),
     autoCompleteHandler: async interaction => {
-        const query = interaction.options.getString('url');
+        let query = interaction.options.getString('url');
         if(!query) return interaction.respond([]);
 
         const parsedUrl = utils.parseUrl(query);
+        if(parsedUrl.domain) query = parsedUrl.url;
+
         const selectedDomain = parsedUrl.domain ?? interaction.dbUser.selectedDomain;
 
         const regex = new RegExp(query, 'i');
