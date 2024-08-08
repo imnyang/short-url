@@ -102,6 +102,9 @@ module.exports = {
         const query = interaction.options.getString('url');
         if(!query) return interaction.respond([]);
 
+        const parsedUrl = utils.parseUrl(query);
+        const selectedDomain = parsedUrl.domain ?? interaction.dbUser.selectedDomain;
+
         const regex = new RegExp(query, 'i');
         const pages = await Page.find({
             url: {
@@ -109,8 +112,8 @@ module.exports = {
             }
         }).limit(50);
 
-        const result = pages.filter(a => a.domain === interaction.dbUser.selectedDomain).slice(0, 25);
-        if(result.length < 25) result.push(...pages.filter(a => a.domain !== interaction.dbUser.selectedDomain && (interaction.teamOwner || interaction.dbUser.allowedDomains.includes(a.domain))).slice(0, 25 - result.length));
+        const result = pages.filter(a => a.domain === selectedDomain).slice(0, 25);
+        if(result.length < 25) result.push(...pages.filter(a => a.domain !== selectedDomain && (interaction.teamOwner || interaction.dbUser.allowedDomains.includes(a.domain))).slice(0, 25 - result.length));
 
         return interaction.respond(result.map(a => ({
             name: utils.formatUrl(Domain.find(d => d.domain === a.domain)?.domain, a.url),
