@@ -62,6 +62,11 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
                         name: '만료일',
                         value: page.expiresAt ? `<t:${Math.round(page.expiresAt / 1000)}:R>` : '없음',
                         inline: true
+                    },
+                    {
+                        name: '생성자',
+                        value: `<@${page.creator}>`,
+                        inline: true
                     }
                 ])
         ],
