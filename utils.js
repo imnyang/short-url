@@ -430,7 +430,12 @@ module.exports.formatVariable = (str, variables, prefix = '') => {
     for(let key in variables) {
         const value = variables[key];
 
-        if(typeof value === 'object') str = module.exports.formatVariable(str, value, `${prefix}${key}.`);
+        if(typeof value === 'object') {
+            if(value instanceof Array) str = str.replaceAll(`{${prefix}${key}}`, value.join(', '));
+            else str = str.replaceAll(`{${prefix}${key}}`, JSON.stringify(value));
+
+            str = module.exports.formatVariable(str, value, `${prefix}${key}.`);
+        }
         else str = str.replaceAll(`{${prefix}${key}}`, value);
     }
     return str;
