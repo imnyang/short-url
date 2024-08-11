@@ -426,14 +426,20 @@ module.exports.validateCustomUrl = (str, isAdmin = false) => !((str !== '/' && s
     || (!isAdmin && str.includes(':'))
     || str.split('/').some(a => a === ':' || a.slice(1).includes(':')));
 
+const objectFormatter = obj => {
+    if(typeof obj !== 'object') return obj.toString();
+
+    if(obj instanceof Array) return obj.map(a => objectFormatter(a)).join(', ');
+    else return JSON.stringify(obj);
+}
+module.exports.objectFormatter = objectFormatter;
+
 module.exports.formatVariable = (str, variables, prefix = '') => {
     for(let key in variables) {
         const value = variables[key];
 
         if(typeof value === 'object') {
-            if(value instanceof Array) str = str.replaceAll(`{${prefix}${key}}`, value.join(', '));
-            else str = str.replaceAll(`{${prefix}${key}}`, JSON.stringify(value));
-
+            str = str.replaceAll(`{${prefix}${key}}`, objectFormatter(value));
             str = module.exports.formatVariable(str, value, `${prefix}${key}.`);
         }
         else str = str.replaceAll(`{${prefix}${key}}`, value);
