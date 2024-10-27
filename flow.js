@@ -250,6 +250,21 @@ module.exports.conditions = [
                 format: a => client.guilds.cache.get(a)?.name || a || '?'
             }
         ]
+    },
+    {
+        id: 'REFERER_KEYWORD',
+        name: 'Referer 키워드 확인',
+        description: 'Referer 헤더에 특정 문자열이 있는지 확인합니다.',
+        emoji: '🔗',
+        format: `Referer에 "{keyword}"가 있다면`,
+        conditionCheck: (data, req) => req.get('Referer')?.includes(data.keyword),
+        data: [
+            {
+                name: 'keyword',
+                label: '키워드',
+                required: true
+            }
+        ]
     }
 ]
 
