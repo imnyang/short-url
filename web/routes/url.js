@@ -43,7 +43,7 @@ app.get('/*/info', async (req, res) => {
 app.get('/*', async (req, res) => {
     const url = req.path.slice(1) || '/';
 
-    const vars = {};
+    const vars = {req};
 
     let page;
 
