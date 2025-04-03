@@ -4,7 +4,8 @@ const {
     GatewayIntentBits,
     Partials,
     InteractionType,
-    OAuth2Scopes
+    OAuth2Scopes,
+    ApplicationIntegrationType
 } = require('discord.js');
 const fs = require('fs');
 const {
@@ -183,7 +184,10 @@ const loadButtonHandler = () => {
 
 const registerCommands = async () => {
     if(debug) await client.guilds.cache.get(process.argv[3]).commands.set(commands);
-    else await client.application.commands.set(commands);
+    else await client.application.commands.set(commands.map(a => ({
+        ...a,
+        integrationTypes: [ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall]
+    })));
     console.log('registered commands.');
 }
 
