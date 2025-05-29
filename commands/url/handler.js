@@ -446,6 +446,6 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
     collector.on('end', () => {
         message.components = utils.disableComponents(message.components);
 
-        return message.edit(message);
+        return interaction.editReply(message);
     });
 }
