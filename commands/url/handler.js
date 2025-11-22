@@ -213,11 +213,25 @@ export const handleMessage = async (pageInfo, message, interaction) => {
 
                 const newPage = await Page.findOneAndUpdate({
                     id: page.id
-                }, page, {
+                }, {
+                    $set: {
+                        flows: page.flows,
+                        url: page.url,
+                        expiresAt: page.expiresAt
+                    }
+                }, {
                     new: true
                 });
 
+                if (!newPage) {
+                    return i.reply({
+                        content: 'URL을 찾을 수 없습니다.',
+                        ephemeral: true
+                    });
+                }
+
                 if (newPage.url.includes(':')) global.wildcardPages[newPage.id] = newPage.toObject();
+                else delete global.wildcardPages[newPage.id];
 
                 return i.update(await getMessage(page, selectedFlowIndex));
             }
