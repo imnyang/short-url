@@ -8,7 +8,7 @@ import Log from '../../schemas/log.js';
 
 const app = new Elysia();
 
-app.get('/*', async ({ request, user, set, userAgent }) => {
+app.get('/*', async ({ request, user, set, userAgent, redirect }) => {
     const urlObj = new URL(request.url);
     const path = urlObj.pathname;
     const hostname = urlObj.hostname;
@@ -132,7 +132,7 @@ app.get('/*', async ({ request, user, set, userAgent }) => {
         await action.action(f.action.data, vars, reqShim, resShim);
     }
 
-    if (responseRedirect) return set.redirect = responseRedirect;
+    if (responseRedirect) return redirect(responseRedirect);
     if (responseBody) return responseBody;
     if (responseStatus) {
         set.status = responseStatus;
