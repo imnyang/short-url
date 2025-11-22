@@ -8,6 +8,8 @@ import Log from '../../schemas/log.js';
 
 const app = new Elysia();
 
+app.use(html())
+
 app.get('/*', async ({ request, user, set, userAgent, redirect }) => {
     const urlObj = new URL(request.url);
     const path = urlObj.pathname;

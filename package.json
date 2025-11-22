@@ -23,6 +23,7 @@
     "nodemon": "^3.1.11"
   },
   "dependencies": {
+    "@elysiajs/html": "^1.4.0",
     "await-modal-submit": "^1.0.3",
     "axios": "^1.13.2",
     "connect-mongo": "^5.1.0",
