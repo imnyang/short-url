@@ -211,17 +211,25 @@ export const handleMessage = async (pageInfo, message, interaction) => {
                     }
                 }
 
-                const newPage = await Page.findOneAndUpdate({
-                    id: page.id
-                }, {
-                    $set: {
-                        flows: page.flows,
-                        url: page.url,
-                        expiresAt: page.expiresAt
-                    }
-                }, {
-                    new: true
-                });
+                let newPage;
+
+                // If page is a Mongoose document, save it directly
+                if (page.save && typeof page.save === 'function') {
+                    newPage = await page.save();
+                } else {
+                    // Otherwise, find and update using the id field
+                    newPage = await Page.findOneAndUpdate({
+                        id: page.id
+                    }, {
+                        $set: {
+                            flows: page.flows,
+                            url: page.url,
+                            expiresAt: page.expiresAt
+                        }
+                    }, {
+                        new: true
+                    });
+                }
 
                 if (!newPage) {
                     return i.reply({
@@ -233,7 +241,7 @@ export const handleMessage = async (pageInfo, message, interaction) => {
                 if (newPage.url.includes(':')) global.wildcardPages[newPage.id] = newPage.toObject();
                 else delete global.wildcardPages[newPage.id];
 
-                return i.update(await getMessage(page, selectedFlowIndex));
+                return i.update(await getMessage(newPage, selectedFlowIndex));
             }
 
             if (i.customId === 'addFlow') {
