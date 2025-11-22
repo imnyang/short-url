@@ -1,21 +1,21 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 const newSchema = new Schema({
     id: {
         type: String,
         required: true,
-        unique: true,
-        index: true
+        unique: true
     },
     selectedDomain: {
         type: String
     },
     allowedDomains: {
-        type: Array,
-        required: true,
+        type: [String],
         default: []
     }
+}, {
+    strict: false
 });
 
-module.exports = mongoose.model('User', newSchema);
+export default mongoose.model('User', newSchema);

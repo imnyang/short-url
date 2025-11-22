@@ -1,45 +1,63 @@
-const express = require('express');
-const passport = require('passport');
-const session = require('express-session');
-const MongoStore = require('connect-mongo');
-const fs = require('fs');
-const useragent = require('express-useragent');
+import { Elysia } from 'elysia';
+import fs from 'fs';
+import { createRequire } from 'module';
+import Session from '../schemas/session.js';
+import useragent from 'express-useragent';
 
+
+const require = createRequire(import.meta.url);
 const setting = require('../setting.json');
 
-const app = express();
+const app = new Elysia();
 
-app.set('trust proxy', setting.TRUST_PROXY);
+// Middleware: Session & UserAgent
+app.derive(async ({ request, cookie: { sessionId } }) => {
+    const userAgentString = request.headers.get('user-agent') || '';
+    const userAgent = useragent.parse(userAgentString);
 
-passport.serializeUser((user, done) => {
-    done(null, user);
+    let session = null;
+    if (sessionId && sessionId.value) {
+        session = await Session.findOne({ sessionId: sessionId.value });
+        if (session && session.expiresAt < new Date()) {
+            await Session.deleteOne({ sessionId: sessionId.value });
+            session = null;
+        }
+    }
+
+    const user = session?.data?.passport?.user || null;
+
+    return {
+        userAgent,
+        session,
+        user,
+        // Helper to set session
+        setSession: async (data) => {
+            const sid = crypto.randomUUID();
+            const newSession = await Session.create({
+                sessionId: sid,
+                data,
+                expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7) // 7 days
+            });
+            sessionId.value = sid;
+            sessionId.path = '/';
+            sessionId.httpOnly = true;
+            sessionId.secure = process.env.NODE_ENV === 'production';
+            return newSession;
+        },
+        destroySession: async () => {
+            if (sessionId && sessionId.value) {
+                await Session.deleteOne({ sessionId: sessionId.value });
+                sessionId.remove();
+            }
+        }
+    };
 });
-passport.deserializeUser((obj, done) => {
-    done(null, obj);
-});
 
-app.use(session({
-    secret: setting.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: `mongodb://${setting.MONGODB_USER}:${setting.MONGODB_PASSWORD}@${setting.MONGODB_HOST}:${setting.MONGODB_PORT}/admin`,
-        dbName: setting.DBNAME
-    })
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-app.use(useragent.express());
-
-for(let f of fs.readdirSync('./web/login')) {
-    require(`./login/${f}`)(passport);
-}
-
+// Load Routes
 const routes = fs.readdirSync('./web/routes');
-for(let f of routes) {
-    app.use(require(`./routes/${f}`));
+for (let f of routes) {
+    const module = await import(`./routes/${f}`);
+    app.use(module.default);
     console.log(`Loaded route ${f}`);
 }
 console.log(`Loaded ${routes.length} routes`);
@@ -47,3 +65,5 @@ console.log(`Loaded ${routes.length} routes`);
 app.listen(setting.PORT, () => {
     console.log(`Server listening on ${setting.PORT}`);
 });
+
+export default app;

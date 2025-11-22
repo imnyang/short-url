@@ -1,28 +1,30 @@
-const express = require('express');
+import { Elysia } from 'elysia';
+import * as main from '../../main.js';
 
-const app = express.Router();
+const app = new Elysia();
 
-const main = require('../../main');
-
-app.get('/debug/device', (req, res) => {
-    res.type('text');
-    res.send(JSON.stringify(req.useragent, null, 2));
+app.get('/debug/device', ({ userAgent }) => {
+    return JSON.stringify({ userAgent }, null, 2); // Simplified as we don't have full useragent parser yet
 });
 
-app.get('/debug/locale', (req, res) => {
-    res.send(req.get('Accept-Language')?.substring(0, 2) || 'en');
+app.get('/debug/locale', ({ request }) => {
+    return request.headers.get('accept-language')?.substring(0, 2) || 'en';
 });
 
-app.get('/debug/error/:code', (req, res) => {
-    res.status(parseInt(req.params.code)).end();
+app.get('/debug/error/:code', ({ params, set }) => {
+    set.status = parseInt(params.code);
+    return '';
 });
 
-app.get('/debug/user', async (req, res) => {
-    if(!req.isAuthenticated()) return res.redirect(`/login?redirect_url=${encodeURIComponent(req.originalUrl)}`);
+app.get('/debug/user', ({ user, request, redirect, set }) => {
+    if (!user) return redirect(`/login?redirect_url=${encodeURIComponent(request.url)}`);
 
-    if(!main.getOwnerID().includes(req.user.id)) return res.status(403).end();
+    if (!main.getOwnerID().includes(user.id)) {
+        set.status = 403;
+        return '';
+    }
 
-    res.send(JSON.stringify(req.user, null, 2));
+    return JSON.stringify(user, null, 2);
 });
 
-module.exports = app;
+export default app;

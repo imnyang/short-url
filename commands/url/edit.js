@@ -1,14 +1,14 @@
-const utils = require('../../utils');
-const handler = require('./handler');
+import * as utils from '../../utils.js';
+import * as handler from './handler.js';
 
-module.exports = async interaction => {
+export default async interaction => {
     const url = interaction.options.getString('url');
     const parsedUrl = url.startsWith('id/') ? ({
         url
     }) : utils.parseUrl(url);
 
     const page = await interaction.resolvePage(parsedUrl);
-    if(!page) return interaction.reply({
+    if (!page) return interaction.reply({
         content: '존재하지 않는 URL입니다.',
         ephemeral: true
     });

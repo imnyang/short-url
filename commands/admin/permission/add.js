@@ -1,6 +1,6 @@
-const User = require('../../../schemas/user');
+import User from '../../../schemas/user.js';
 
-module.exports = async interaction => {
+export default async interaction => {
     const { options } = interaction;
 
     const user = options.getUser('user');

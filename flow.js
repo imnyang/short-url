@@ -1,12 +1,12 @@
-const axios = require('axios');
+import axios from 'axios';
 
-const utils = require('./utils');
+import * as utils from './utils.js';
 
 const discordApi = axios.create({
     baseURL: 'https://discord.com/api/v10'
 });
 
-module.exports.conditions = [
+export const conditions = [
     {
         id: 'EVERYONE',
         name: '모든 유저',
@@ -39,14 +39,14 @@ module.exports.conditions = [
         format: '기기가 목록에 포함되어 있다면',
         conditionCheck: (data, req) => {
             const devices = data.device.split(',');
-            if(devices.includes('DESKTOP') && req.useragent.isDesktop) return true;
-            if(devices.includes('MOBILE') && req.useragent.isMobile && !req.useragent.isTablet) return true;
-            if(devices.includes('TABLET') && req.useragent.isTablet && !req.useragent.isMobile) return true;
-            if(devices.includes('WINDOWS') && req.useragent.isWindows) return true;
-            if(devices.includes('MAC') && req.useragent.isMac) return true;
-            if(devices.includes('LINUX') && req.useragent.isLinux && !req.useragent.isAndroid) return true;
-            if(devices.includes('ANDROID') && req.useragent.isAndroid) return true;
-            if(devices.includes('IPHONE') && req.useragent.isiPhone) return true;
+            if (devices.includes('DESKTOP') && req.useragent.isDesktop) return true;
+            if (devices.includes('MOBILE') && req.useragent.isMobile && !req.useragent.isTablet) return true;
+            if (devices.includes('TABLET') && req.useragent.isTablet && !req.useragent.isMobile) return true;
+            if (devices.includes('WINDOWS') && req.useragent.isWindows) return true;
+            if (devices.includes('MAC') && req.useragent.isMac) return true;
+            if (devices.includes('LINUX') && req.useragent.isLinux && !req.useragent.isAndroid) return true;
+            if (devices.includes('ANDROID') && req.useragent.isAndroid) return true;
+            if (devices.includes('IPHONE') && req.useragent.isiPhone) return true;
 
             return false;
         },
@@ -109,12 +109,12 @@ module.exports.conditions = [
         format: '브라우저가 목록에 포함되어 있다면',
         conditionCheck: (data, req) => {
             const browsers = data.browser.split(',');
-            if(browsers.includes('CHROME') && req.useragent.isChrome) return true;
-            if(browsers.includes('SAFARI') && req.useragent.isSafari) return true;
-            if(browsers.includes('FIREFOX') && req.useragent.isFirefox) return true;
-            if(browsers.includes('EDGE') && req.useragent.isEdge) return true;
-            if(browsers.includes('OPERA') && req.useragent.isOpera) return true;
-            if(browsers.includes('IE') && req.useragent.isIE) return true;
+            if (browsers.includes('CHROME') && req.useragent.isChrome) return true;
+            if (browsers.includes('SAFARI') && req.useragent.isSafari) return true;
+            if (browsers.includes('FIREFOX') && req.useragent.isFirefox) return true;
+            if (browsers.includes('EDGE') && req.useragent.isEdge) return true;
+            if (browsers.includes('OPERA') && req.useragent.isOpera) return true;
+            if (browsers.includes('IE') && req.useragent.isIE) return true;
 
             return false;
         },
@@ -166,7 +166,7 @@ module.exports.conditions = [
         emoji: '🔒',
         format: '디스코드 계정이 목록에 있다면',
         conditionCheck: (data, req, res) => {
-            if(!req.isAuthenticated()) {
+            if (!req.isAuthenticated()) {
                 res.redirect(`/login?redirect_url=${encodeURIComponent(req.originalUrl)}`);
                 return false;
             }
@@ -197,8 +197,8 @@ module.exports.conditions = [
                 label: '날짜',
                 placeholder: 'YYYY-MM-DD HH:mm:ss',
                 required: true,
-                validate: a => !isNaN(new Date(a)),
-                format: a => isNaN(new Date(a)) ? '?' : new Date(a).toLocaleString()
+                validate: a => !isNaN(new Date(a).getTime()),
+                format: a => isNaN(new Date(a).getTime()) ? '?' : new Date(a).toLocaleString()
             }
         ]
     },
@@ -211,7 +211,7 @@ module.exports.conditions = [
         conditionCheck: async (data, req, res) => {
             const loginRedirect = () => res.redirect(`/login?redirect_url=${encodeURIComponent(req.originalUrl)}`);
 
-            if(!req.isAuthenticated()) {
+            if (!req.isAuthenticated()) {
                 loginRedirect();
                 return false;
             }
@@ -219,7 +219,7 @@ module.exports.conditions = [
             const fetchedAt = new Date(req.user.fetchedAt);
 
             let guilds;
-            if(req.user.guilds?.length && !isNaN(fetchedAt) && Date.now() - fetchedAt.getTime() < 1000 * 5) guilds = req.user.guilds;
+            if (req.user.guilds?.length && !isNaN(fetchedAt.getTime()) && Date.now() - fetchedAt.getTime() < 1000 * 5) guilds = req.user.guilds;
             else try {
                 const { data } = await discordApi.get('/users/@me/guilds', {
                     headers: {
@@ -228,7 +228,7 @@ module.exports.conditions = [
                 });
 
                 guilds = data;
-            } catch(e) {
+            } catch (e) {
                 loginRedirect();
                 return false;
             }
@@ -247,7 +247,7 @@ module.exports.conditions = [
                 label: '디스코드 서버 ID',
                 required: true,
                 validate: a => !isNaN(a),
-                format: a => client.guilds.cache.get(a)?.name || a || '?'
+                format: a => global.client.guilds.cache.get(a)?.name || a || '?'
             }
         ]
     },
@@ -257,7 +257,7 @@ module.exports.conditions = [
         description: 'Referer 헤더에 특정 문자열이 있는지 확인합니다.',
         emoji: '🔗',
         format: `Referer에 "{keyword}"가 있다면`,
-        conditionCheck: (data, req) => req.get('Referer')?.includes(data.keyword),
+        conditionCheck: (data, req) => req.get('Referer')?.includes(data.keyword) || false,
         data: [
             {
                 name: 'keyword',
@@ -268,22 +268,23 @@ module.exports.conditions = [
     }
 ]
 
-module.exports.getCondition = id => module.exports.conditions.find(condition => condition.id === id);
+export const getCondition = id => conditions.find(condition => condition.id === id);
 
-module.exports.getConditionEmoji = condition => {
-    const conditionInfo = module.exports.getCondition(condition.id);
+export const getConditionEmoji = condition => {
+    const conditionInfo = getCondition(condition.id);
+    if (!conditionInfo) return '❓';
 
     const firstDataInfo = conditionInfo.data?.[0];
-    if(firstDataInfo?.choices) {
+    if (firstDataInfo?.choices) {
         const selectedData = condition.data[firstDataInfo.name]?.split(',');
         const selectedDataInfo = firstDataInfo.choices.find(c => c.name === selectedData?.[0]);
-        if(selectedDataInfo?.emoji) return selectedDataInfo.emoji;
+        if (selectedDataInfo?.emoji) return selectedDataInfo.emoji;
     }
 
     return conditionInfo.emoji;
 }
 
-module.exports.actions = [
+export const actions = [
     {
         id: 'JUMP',
         name: '명령으로 이동',
@@ -347,4 +348,4 @@ module.exports.actions = [
     }
 ]
 
-module.exports.getAction = id => module.exports.actions.find(action => action.id === id);
+export const getAction = id => actions.find(action => action.id === id);

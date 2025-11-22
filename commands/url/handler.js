@@ -1,4 +1,4 @@
-const {
+import {
     EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
@@ -7,18 +7,20 @@ const {
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle
-} = require('discord.js');
-const parseDuration = require('parse-duration');
+} from 'discord.js';
+import parseDuration from 'parse-duration';
 
-const utils = require('../../utils');
-const flow = require('../../flow');
+import * as utils from '../../utils.js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const flow = require('../../flow.js');
 
-const Page = require('../../schemas/page');
+import Page from '../../schemas/page.js';
 
 const resolvePage = async pageInfo => {
     let page;
-    if(typeof pageInfo === 'string') page = await Page.findOne({ id: pageInfo });
-    else if(typeof pageInfo === 'object') page = pageInfo;
+    if (typeof pageInfo === 'string') page = await Page.findOne({ id: pageInfo });
+    else if (typeof pageInfo === 'object') page = pageInfo;
 
     return page;
 }
@@ -26,7 +28,7 @@ const resolvePage = async pageInfo => {
 const formatVariable = (flow, data) => {
     let str = flow.format;
 
-    if(flow.data?.length) for(let key of flow.data.map(a => a.name)) {
+    if (flow.data?.length) for (let key of flow.data.map(a => a.name)) {
         const flowData = flow.data.find(a => a.name === key);
         const value = flowData?.format?.(data[key]) || data[key] || '?';
         str = str.replaceAll(`{${key}}`, value);
@@ -36,7 +38,7 @@ const formatVariable = (flow, data) => {
 
 const getMessage = async (pageInfo, selectedFlowIndex) => {
     const page = await resolvePage(pageInfo);
-    if(!page) return;
+    if (!page) return;
 
     selectedFlowIndex ??= page.flows.length - 1;
 
@@ -166,15 +168,15 @@ const getMessage = async (pageInfo, selectedFlowIndex) => {
         ]
     }
 }
-module.exports.getMessage = getMessage;
+export { getMessage };
 
-module.exports.handleMessage = async (pageInfo, message, interaction) => {
-    if(!message || !interaction) return;
+export const handleMessage = async (pageInfo, message, interaction) => {
+    if (!message || !interaction) return;
 
     const user = interaction.user;
 
     const page = await resolvePage(pageInfo);
-    if(!page) return;
+    if (!page) return;
 
     let selectedFlowIndex = page.flows.length - 1;
 
@@ -184,14 +186,14 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
     });
 
     collector.on('collect', async i => {
-        if(i.isButton()) {
-            if(i.customId === 'save') {
-                for(let f of page.flows) {
+        if (i.isButton()) {
+            if (i.customId === 'save') {
+                for (let f of page.flows) {
                     const condition = flow.getCondition(f.condition.id);
                     const action = flow.getAction(f.action.id);
 
-                    if(condition.data) for(let dataInfo of condition.data) {
-                        if(dataInfo.required && !f.condition.data?.[dataInfo.name]) {
+                    if (condition.data) for (let dataInfo of condition.data) {
+                        if (dataInfo.required && !f.condition.data?.[dataInfo.name]) {
                             return i.reply({
                                 content: `**${condition.name}**의 **${dataInfo.name}** 데이터가 비어있습니다.`,
                                 ephemeral: true
@@ -199,8 +201,8 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                         }
                     }
 
-                    if(action.data) for(let dataInfo of action.data) {
-                        if(dataInfo.required && !f.action.data?.[dataInfo.name]) {
+                    if (action.data) for (let dataInfo of action.data) {
+                        if (dataInfo.required && !f.action.data?.[dataInfo.name]) {
                             return i.reply({
                                 content: `**${action.name}**의 **${dataInfo.label}** 데이터가 비어있습니다.`,
                                 ephemeral: true
@@ -215,12 +217,12 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                     new: true
                 });
 
-                if(newPage.url.includes(':')) global.wildcardPages[newPage.id] = newPage.toObject();
+                if (newPage.url.includes(':')) global.wildcardPages[newPage.id] = newPage.toObject();
 
                 return i.update(await getMessage(page, selectedFlowIndex));
             }
 
-            if(i.customId === 'addFlow') {
+            if (i.customId === 'addFlow') {
                 page.flows.splice(selectedFlowIndex + 1, 0, {
                     condition: {
                         id: 'EVERYONE',
@@ -236,7 +238,7 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                 return i.update(await getMessage(page, selectedFlowIndex));
             }
 
-            if(i.customId === 'editPage') {
+            if (i.customId === 'editPage') {
                 let response;
                 try {
                     response = await i.awaitModalSubmit(
@@ -262,30 +264,30 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                                             .replace(/\..+/, '')
                                         : '')
                             ].map(component => new ActionRowBuilder().addComponents([component])))
-                    , 1000 * 60 * 5);
-                } catch(e) {
+                        , 1000 * 60 * 5);
+                } catch (e) {
                     return;
                 }
 
                 const url = response.fields.getTextInputValue('url');
 
-                if(!utils.validateCustomUrl(url, interaction.teamOwner)) return response.reply({
+                if (!utils.validateCustomUrl(url, interaction.teamOwner)) return response.reply({
                     content: 'URL로 사용할 수 없는 문자열이 포함돼 수정되지 않았습니다.',
                     ephemeral: true
                 });
 
                 let expiresAt;
                 const expiresAtStr = response.fields.getTextInputValue('expiresAt');
-                if(expiresAtStr) {
+                if (expiresAtStr) {
                     const expiresAtDate = new Date(expiresAtStr);
-                    if(!isNaN(expiresAtDate)) expiresAt = expiresAtDate.getTime();
+                    if (!isNaN(expiresAtDate)) expiresAt = expiresAtDate.getTime();
                     else {
                         expiresAt = parseDuration(expiresAtStr);
-                        if(expiresAt) expiresAt += Date.now();
+                        if (expiresAt) expiresAt += Date.now();
                     }
                 }
 
-                if(!expiresAt && expiresAtStr) return response.reply({
+                if (!expiresAt && expiresAtStr) return response.reply({
                     content: '만료일 형식이 잘못되어 URL이 수정되지 않았습니다.',
                     ephemeral: true
                 });
@@ -296,7 +298,7 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                 return response.update(await getMessage(page, selectedFlowIndex));
             }
 
-            if(i.customId === 'deletePage') {
+            if (i.customId === 'deletePage') {
                 await Page.deleteOne({
                     id: page.id
                 });
@@ -306,7 +308,7 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                 return i.update(i.message);
             }
 
-            if(i.customId === 'up') {
+            if (i.customId === 'up') {
                 const flow = page.flows[selectedFlowIndex];
                 page.flows.splice(selectedFlowIndex, 1);
                 page.flows.splice(selectedFlowIndex - 1, 0, flow);
@@ -315,7 +317,7 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                 return i.update(await getMessage(page, selectedFlowIndex));
             }
 
-            if(i.customId === 'down') {
+            if (i.customId === 'down') {
                 const flow = page.flows[selectedFlowIndex];
                 page.flows.splice(selectedFlowIndex, 1);
                 page.flows.splice(selectedFlowIndex + 1, 0, flow);
@@ -324,19 +326,19 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                 return i.update(await getMessage(page, selectedFlowIndex));
             }
 
-            if(['editCondition', 'editAction'].includes(i.customId)) {
+            if (['editCondition', 'editAction'].includes(i.customId)) {
                 const pageFlow = page.flows[selectedFlowIndex];
                 const targetFlowObj = pageFlow[i.customId === 'editCondition' ? 'condition' : 'action'];
                 targetFlowObj.data ??= {};
 
                 let target;
-                if(i.customId === 'editCondition') target = flow.getCondition(pageFlow.condition.id);
-                else if(i.customId === 'editAction') target = flow.getAction(pageFlow.action.id);
+                if (i.customId === 'editCondition') target = flow.getCondition(pageFlow.condition.id);
+                else if (i.customId === 'editAction') target = flow.getAction(pageFlow.action.id);
 
                 const data = target.data;
-                if(!data.length) return;
+                if (!data.length) return;
 
-                if(data[0].choices) {
+                if (data[0].choices) {
                     const prevValues = targetFlowObj.data[data[0].name]?.split(',') ?? [];
 
                     await i.update({
@@ -370,11 +372,11 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                             filter: i => i.user.id === user.id,
                             time: 1000 * 60 * 5
                         });
-                    } catch(e) {
+                    } catch (e) {
                         return;
                     }
 
-                    if(response.customId === 'cancel') return response.update(await getMessage(page, selectedFlowIndex));
+                    if (response.customId === 'cancel') return response.update(await getMessage(page, selectedFlowIndex));
 
                     targetFlowObj.data[data[0].name] = response.values.join(',');
                     return response.update(await getMessage(page, selectedFlowIndex));
@@ -395,16 +397,16 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                                         .setMaxLength(a.maxLength ?? 4000)
                                         .setValue(targetFlowObj.data[a.name] || '')
                                 ).map(component => new ActionRowBuilder().addComponents([component])))
-                        , 1000 * 60 * 5);
-                    } catch(e) {
+                            , 1000 * 60 * 5);
+                    } catch (e) {
                         return;
                     }
 
-                    for(let data of target.data) {
+                    for (let data of target.data) {
                         const responseData = response.fields.getTextInputValue(data.name);
-                        if(data.validate) {
+                        if (data.validate) {
                             const validation = await data.validate(responseData);
-                            if(!validation) return response.reply({
+                            if (!validation) return response.reply({
                                 content: `${data.label}의 형식이 잘못되어 ${i.customId === 'editCondition' ? '조건' : '작업'}이 수정되지 않았습니다.`,
                                 ephemeral: true
                             });
@@ -416,26 +418,26 @@ module.exports.handleMessage = async (pageInfo, message, interaction) => {
                 }
             }
 
-            if(i.customId === 'deleteFlow') {
+            if (i.customId === 'deleteFlow') {
                 page.flows.splice(selectedFlowIndex, 1);
-                if(selectedFlowIndex >= page.flows.length) selectedFlowIndex--;
+                if (selectedFlowIndex >= page.flows.length) selectedFlowIndex--;
 
                 return i.update(await getMessage(page, selectedFlowIndex));
             }
         }
 
-        if(i.isStringSelectMenu()) {
-            if(i.customId === 'condition') page.flows[selectedFlowIndex].condition = {
+        if (i.isStringSelectMenu()) {
+            if (i.customId === 'condition') page.flows[selectedFlowIndex].condition = {
                 id: i.values[0],
                 data: {}
             }
 
-            else if(i.customId === 'action') page.flows[selectedFlowIndex].action = {
+            else if (i.customId === 'action') page.flows[selectedFlowIndex].action = {
                 id: i.values[0],
                 data: {}
             }
 
-            else if(i.customId === 'flow') selectedFlowIndex = Number(i.values[0]);
+            else if (i.customId === 'flow') selectedFlowIndex = Number(i.values[0]);
 
             else return;
 

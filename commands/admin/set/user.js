@@ -1,8 +1,8 @@
-const { escapeCodeBlock } = require('discord.js');
+import { escapeCodeBlock } from 'discord.js';
 
-const User = require('../../../schemas/user');
+import User from '../../../schemas/user.js';
 
-module.exports = async interaction => {
+export default async interaction => {
     const { options } = interaction;
 
     const user = options.getUser('user');
@@ -17,10 +17,10 @@ module.exports = async interaction => {
         }, {
             new: true
         });
-        if(!updated) return interaction.reply('해당 유저를 찾을 수 없습니다.');
+        if (!updated) return interaction.reply('해당 유저를 찾을 수 없습니다.');
 
         return interaction.reply(`${user.displayName}님의 "${key}" 값을 "${updated[key]}"(으)로 변경했습니다.`);
-    } catch(e) {
+    } catch (e) {
         return interaction.reply(`오류가 발생하였습니다.\`\`\`js\n${escapeCodeBlock(e.toString())}\n\`\`\``);
     }
 }

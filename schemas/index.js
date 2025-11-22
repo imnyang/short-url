@@ -1,17 +1,19 @@
-const mongoose = require('mongoose');
-const fs = require('fs');
+import mongoose from 'mongoose';
+import fs from 'fs';
 
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const setting = require('../setting.json');
 
-const Page = require('./page');
+import Page from './page.js';
 
-module.exports = () => {
-    const connect = () => {
-        mongoose.connect(`mongodb://${setting.MONGODB_USER}:${setting.MONGODB_PASSWORD}@${setting.MONGODB_HOST}:${setting.MONGODB_PORT}/admin`, {
-            dbName: setting.DBNAME
-        }, async e => {
-            if(e) console.error(e);
-            else console.log(`MongoDB connected.`);
+export default () => {
+    const connect = async () => {
+        try {
+            await mongoose.connect(`mongodb://${setting.MONGODB_USER}:${setting.MONGODB_PASSWORD}@${setting.MONGODB_HOST}:${setting.MONGODB_PORT}/admin`, {
+                dbName: setting.DBNAME
+            });
+            console.log(`MongoDB connected.`);
 
             const pages = await Page.find({
                 url: {
@@ -19,10 +21,12 @@ module.exports = () => {
                 }
             }).lean();
 
-            for(let page of pages) {
-                global.wildcardPages[page.id] = page;
+            for (let page of pages) {
+                global.wildcardPages[page._id] = page;
             }
-        });
+        } catch (e) {
+            console.error(e);
+        }
     }
     connect();
     mongoose.connection.on('error', e => {
@@ -34,9 +38,9 @@ module.exports = () => {
     });
 
     console.log('Loading schemas...');
-    fs.readdirSync('./schemas').forEach(file => {
-        if(file !== 'index.js') {
-            require(`./${file}`);
+    fs.readdirSync('./schemas').forEach(async file => {
+        if (file !== 'index.js') {
+            await import(`./${file}`);
             console.log(`${file.trim()} schema loaded.`);
         }
     });

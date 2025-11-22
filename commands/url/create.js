@@ -1,25 +1,27 @@
-const {
+import {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle
-} = require('discord.js');
-const randomstring = require('randomstring');
+} from 'discord.js';
+import randomstring from 'randomstring';
 
-const main = require('../../main');
-const utils = require('../../utils');
+import * as main from '../../main.js';
+import * as utils from '../../utils.js';
 
-const Page = require('../../schemas/page');
+import Page from '../../schemas/page.js';
 
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const Domain = require('../../domain.json');
 
-module.exports = async interaction => {
+export default async interaction => {
     const { options } = interaction;
 
     let domain = options.getString('domain');
     let customUrl = options.getString('customurl');
     const dest = options.getString('dest');
 
-    if(!domain && customUrl?.includes('/')) {
+    if (!domain && customUrl?.includes('/')) {
         const parsedUrl = utils.parseUrl(customUrl);
         domain = parsedUrl.domain;
         customUrl = parsedUrl.url;
@@ -28,23 +30,23 @@ module.exports = async interaction => {
     domain ??= interaction.dbUser.selectedDomain || Domain[0].domain;
     customUrl ??= randomstring.generate(main.getOwnerID().includes(interaction.user.id) ? 4 : 8);
 
-    if(!(interaction.teamOwner || interaction.dbUser.allowedDomains.includes(domain)) || !Domain.some(d => d.domain === domain)) return interaction.reply({
+    if (!(interaction.teamOwner || interaction.dbUser.allowedDomains.includes(domain)) || !Domain.some(d => d.domain === domain)) return interaction.reply({
         content: '사용할 수 없는 도메인입니다.',
         ephemeral: true
     });
 
-    if(customUrl) {
+    if (customUrl) {
         const checkPage = await Page.findOne({
             domain,
             url: customUrl
         });
-        if(checkPage) return interaction.reply({
+        if (checkPage) return interaction.reply({
             content: '이미 존재하는 URL입니다.',
             ephemeral: true
         });
     }
 
-    if(!utils.validateCustomUrl(customUrl, interaction.teamOwner)) return interaction.reply({
+    if (!utils.validateCustomUrl(customUrl, interaction.teamOwner)) return interaction.reply({
         content: 'URL로 사용할 수 없는 문자열입니다.',
         ephemeral: true
     });
@@ -59,8 +61,8 @@ module.exports = async interaction => {
             action: {
                 id: dest ? 'REDIRECT' : 'REJECT',
                 data: dest ? {
-                        url: dest
-                    }
+                    url: dest
+                }
                     : {}
             }
         }],
@@ -68,7 +70,7 @@ module.exports = async interaction => {
     });
     await page.save();
 
-    if(page.url.includes(':')) global.wildcardPages[page.id] = page.toObject();
+    if (page.url.includes(':')) global.wildcardPages[page.id] = page.toObject();
 
     return interaction.reply({
         content: `URL을 생성했습니다: ${utils.formatUrl(page.domain, page.url)}\nURL을 수정하려면 아래 버튼을 누르세요.`,

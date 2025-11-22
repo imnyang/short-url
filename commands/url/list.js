@@ -1,10 +1,12 @@
-const utils = require('../../utils');
+import * as utils from '../../utils.js';
 
-const Page = require('../../schemas/page');
+import Page from '../../schemas/page.js';
 
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const Domain = require('../../domain.json');
 
-module.exports = async interaction => {
+export default async interaction => {
     await interaction.deferReply({
         ephemeral: true
     });
@@ -13,7 +15,7 @@ module.exports = async interaction => {
 
     domain ??= interaction.dbUser.selectedDomain || Domain[0].domain;
 
-    if(!(interaction.teamOwner || interaction.dbUser.allowedDomains.includes(domain)) || !Domain.some(d => d.domain === domain)) return interaction.reply({
+    if (!(interaction.teamOwner || interaction.dbUser.allowedDomains.includes(domain)) || !Domain.some(d => d.domain === domain)) return interaction.reply({
         content: '사용할 수 없는 도메인입니다.',
         ephemeral: true
     });

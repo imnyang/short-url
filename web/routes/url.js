@@ -1,102 +1,146 @@
-const express = require('express');
+import { Elysia } from 'elysia';
+import * as main from '../../main.js';
+import * as utils from '../../utils.js';
+import * as flow from '../../flow.js';
+import User from '../../schemas/user.js';
+import Page from '../../schemas/page.js';
+import Log from '../../schemas/log.js';
 
-const main = require('../../main');
-const utils = require('../../utils');
-const flow = require('../../flow');
+const app = new Elysia();
 
-const User = require('../../schemas/user');
-const Page = require('../../schemas/page');
-const Log = require('../../schemas/log');
+app.get('/*', async ({ request, user, set, userAgent }) => {
+    const urlObj = new URL(request.url);
+    const path = urlObj.pathname;
+    const hostname = urlObj.hostname;
 
-const app = express.Router();
+    // Handle /info
+    if (path.endsWith('/info')) {
+        if (!user) return set.redirect = `/login?redirect_url=${encodeURIComponent(request.url)}`;
 
-app.get('/*/info', async (req, res) => {
-    if(!req.isAuthenticated()) return res.redirect(`/login?redirect_url=${encodeURIComponent(req.originalUrl)}`);
+        const dbUser = await User.findOne({ id: user.id });
+        if (!main.getOwnerID().includes(user.id) && !dbUser.allowedDomains.includes(hostname)) {
+            set.status = 403;
+            return '';
+        }
 
-    const user = await User.findOne({
-        id: req.user.id
-    });
-    if(!main.getOwnerID().includes(req.user.id) && !user.allowedDomains.includes(req.hostname)) return res.status(403).end();
+        let url = path.slice(1).split('/').slice(0, -1).join('/');
+        if (url === '@root') url = '/';
 
-    let url = req.path.slice(1).split('/').slice(0, -1).join('/');
-    if(url === '@root') url = '/';
+        let page;
+        const wildcardPage = utils.findWildcardPage(hostname, url);
 
-    let page;
+        if (wildcardPage) page = wildcardPage.page;
+        else page = await Page.findOne({ domain: hostname, url }).lean();
 
-    const wildcardPage = utils.findWildcardPage(req.hostname, url);
+        if (!page) {
+            set.status = 404;
+            return '';
+        }
 
-    if(wildcardPage) page = wildcardPage.page;
-    else page = await Page.findOne({
-        domain: req.hostname,
-        url
-    }).lean();
-    if(!page) return res.status(404).end();
+        const pageLogs = await Log.find({ urlId: page.id });
+        page.usedCount = pageLogs.length;
 
-    const pageLogs = await Log.find({
-        urlId: page.id
-    });
-    page.usedCount = pageLogs.length;
+        return JSON.stringify(page, null, 2);
+    }
 
-    res.end(JSON.stringify(page, null, 2));
-});
-
-app.get('/*', async (req, res) => {
-    const url = req.path.slice(1) || '/';
+    // Handle Short URL
+    const url = path.slice(1) || '/';
 
     const vars = {
-        headers: req.headers
+        headers: request.headers
     };
 
     let page;
+    const wildcardPage = utils.findWildcardPage(hostname, url);
 
-    const wildcardPage = utils.findWildcardPage(req.hostname, url);
-
-    if(wildcardPage) {
+    if (wildcardPage) {
         page = wildcardPage.page;
-        for(let key in wildcardPage.vars) vars[key] = wildcardPage.vars[key];
+        for (let key in wildcardPage.vars) vars[key] = wildcardPage.vars[key];
+    } else {
+        page = await Page.findOne({ domain: hostname, url });
     }
-    else page = await Page.findOne({
-        domain: req.hostname,
-        url
-    });
 
-    if(!page) return res.status(404).end();
+    if (!page) {
+        set.status = 404;
+        return '';
+    }
 
-    if(req.user) vars.user = req.user;
+    if (user) vars.user = user;
 
     Log.create({
         url: page.url,
         urlId: page.id,
-        ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        locale: req.get('Accept-Language'),
-        user: req.user?.id
+        ip: app.server?.requestIP(request)?.address || 'unknown', // Elysia IP check
+        userAgent: request.headers.get('user-agent'),
+        locale: request.headers.get('accept-language'),
+        user: user?.id
     }).then();
 
     let loopCount = 0;
-    for(let i = 0; i < page.flows.length; i++) {
-        if(res.headersSent) return;
-        if(++loopCount > 500) return res.status(508).end();
+
+    // Shim req/res for flow.js
+    const reqShim = {
+        user,
+        isAuthenticated: () => !!user,
+        get: (header) => request.headers.get(header),
+        useragent: userAgent,
+        originalUrl: request.url,
+        ip: app.server?.requestIP(request)?.address || 'unknown'
+    };
+
+    let responseRedirect = null;
+    let responseBody = null;
+    let responseStatus = null;
+
+    const resShim = {
+        redirect: (url) => { responseRedirect = url; },
+        send: (body) => { responseBody = body; },
+        status: (code) => {
+            responseStatus = code;
+            return {
+                end: () => { }
+            };
+        },
+        end: () => { }
+    };
+
+    for (let i = 0; i < page.flows.length; i++) {
+        if (responseRedirect || responseBody || responseStatus) break;
+        if (++loopCount > 500) {
+            set.status = 508;
+            return '';
+        }
 
         const f = page.flows[i];
 
         const condition = flow.getCondition(f.condition.id);
         const action = flow.getAction(f.action.id);
 
-        const conditionResult = await condition.conditionCheck(f.condition.data, req, res);
-        if(!conditionResult) continue;
+        const conditionResult = await condition.conditionCheck(f.condition.data, reqShim, resShim);
+        if (!conditionResult) continue;
 
-        if(action.id === 'JUMP') {
+        if (action.id === 'JUMP') {
             const targetIndex = f.action.data.index - 1;
-            if(targetIndex < 0 || targetIndex >= page.flows.length) return res.status(406).end();
+            if (targetIndex < 0 || targetIndex >= page.flows.length) {
+                set.status = 406;
+                return '';
+            }
             i = targetIndex - 1;
             continue;
         }
 
-        await action.action(f.action.data, vars, req, res);
+        await action.action(f.action.data, vars, reqShim, resShim);
     }
 
-    res.status(406).end();
+    if (responseRedirect) return set.redirect = responseRedirect;
+    if (responseBody) return responseBody;
+    if (responseStatus) {
+        set.status = responseStatus;
+        return '';
+    }
+
+    set.status = 406;
+    return '';
 });
 
-module.exports = app;
+export default app;

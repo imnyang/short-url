@@ -1,31 +1,31 @@
-const main = require('../main');
-const utils = require('../utils');
-const handler = require('../commands/url/handler');
+import * as main from '../main.js';
+import * as utils from '../utils.js';
+import * as handler from '../commands/url/handler.js';
 
-const Page = require('../schemas/page');
+import Page from '../schemas/page.js';
 
-module.exports = async interaction => {
+export default async interaction => {
     const params = interaction.customId.split('_');
-    if(params.length < 3) return;
+    if (params.length < 3) return;
 
     const action = params[1];
 
     const page = await Page.findOne({
         id: params[2]
     });
-    if(!page) return interaction.reply({
+    if (!page) return interaction.reply({
         content: '존재하지 않는 URL입니다.',
         ephemeral: true
     });
 
-    if(!main.getOwnerID().includes(interaction.user.id) && !interaction.dbUser.allowedDomains.includes(page.domain)) return;
+    if (!main.getOwnerID().includes(interaction.user.id) && !interaction.dbUser.allowedDomains.includes(page.domain)) return;
 
-    if(action === 'edit') {
+    if (action === 'edit') {
         const msg = await interaction.reply(await handler.getMessage(page));
         return handler.handleMessage(page, msg, interaction);
     }
 
-    if(action === 'delete') {
+    if (action === 'delete') {
         await Page.deleteOne({
             id: page.id
         });

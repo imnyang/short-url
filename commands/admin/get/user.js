@@ -1,14 +1,14 @@
-const { escapeCodeBlock } = require('discord.js');
+import { escapeCodeBlock } from 'discord.js';
 
-const User = require('../../../schemas/user');
+import User from '../../../schemas/user.js';
 
-module.exports = async interaction => {
+export default async interaction => {
     const user = interaction.options.getUser('user');
 
     const dbUser = await User.findOne({
         id: user.id
     });
-    if(!dbUser) return interaction.reply({
+    if (!dbUser) return interaction.reply({
         content: '해당 유저를 찾을 수 없습니다.',
         ephemeral: true
     });
