@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { html, Html } from '@elysiajs/html'
 import * as main from '../../main.js';
 import * as utils from '../../utils.js';
 import * as flow from '../../flow.js';
